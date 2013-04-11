@@ -109,15 +109,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
 
-
         float textScale = 0.01f;
         Matrix.setIdentityM(mScaleMatrix, 0);
         Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, textScale);
         Matrix.multiplyMM(mMVPMatrix, 0, mScaleMatrix, 0, mMVPMatrix, 0);
-
-//        float textScale = 1.0f;
-//        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, textScale);
-//        Matrix.multiplyMM(mMVPMatrix, 0, mScaleMatrix, 0, mVMatrix, 0);
 
         // TEST: render the entire font texture
         glText.drawTexture( width/2, height/2, mMVPMatrix);            // Draw the Entire Texture
