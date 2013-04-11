@@ -16,25 +16,19 @@
 
 package com.example.android.opengl;
 
+import android.content.Context;
+import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
+import android.util.Log;
+import com.example.android.opengl.gltext.GLText;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
-import android.os.SystemClock;
-import android.util.Log;
-import com.example.android.opengl.gltext.GLText;
 
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
@@ -48,6 +42,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mVMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
     private final float[] mScaleMatrix = new float[16];
+    private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
@@ -93,8 +88,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-
-        // Draw square
+//
+//        // Draw square
         mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
@@ -104,16 +99,24 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
 
         // Combine the rotation matrix with the projection and camera view
-        Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mRotationMatrix, 0);
 
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
 
         float textScale = 0.01f;
         Matrix.setIdentityM(mScaleMatrix, 0);
-        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, textScale);
-        Matrix.multiplyMM(mMVPMatrix, 0, mScaleMatrix, 0, mMVPMatrix, 0);
+        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
+        drawText();
+    }
 
+    private float[] dupMatrix (float[] input) {
+        System.arraycopy(input, 0, mTmp, 0, input.length);
+        return mTmp;
+    }
+
+    private void drawText() {
         // TEST: render the entire font texture
         glText.drawTexture( width/2, height/2, mMVPMatrix);            // Draw the Entire Texture
 
@@ -128,7 +131,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         glText.draw( "More Lines...", 50, 40 );        // Draw Test String
         glText.draw( "The End.", 50, 40 + glText.getCharHeight(), 180);  // Draw Test String
         glText.end();
-
     }
 
     @Override
@@ -198,7 +200,7 @@ class Triangle {
                     "attribute vec4 vPosition;" +
                     "void main() {" +
                     // the matrix must be included as a modifier of gl_Position
-                    "  gl_Position = vPosition * uMVPMatrix;" +
+                    "  gl_Position = uMVPMatrix * vPosition;" +
                     "}";
 
     private final String fragmentShaderCode =
@@ -302,7 +304,7 @@ class Square {
                     "attribute vec4 vPosition;" +
                     "void main() {" +
                     // the matrix must be included as a modifier of gl_Position
-                    "  gl_Position = vPosition * uMVPMatrix;" +
+                    "  gl_Position = uMVPMatrix * vPosition;" +
                     "}";
 
     private final String fragmentShaderCode =
