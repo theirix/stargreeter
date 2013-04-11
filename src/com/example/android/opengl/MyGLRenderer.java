@@ -32,6 +32,7 @@ import android.graphics.drawable.Drawable;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 import android.util.Log;
 import com.example.android.opengl.gltext.GLText;
 
@@ -46,6 +47,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
+    private final float[] mScaleMatrix = new float[16];
 
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
@@ -55,7 +57,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     public MyGLRenderer(Context context) {
         mContext = context;
-        width = height = 200;
+        width = height = 0;
     }
 
     @Override
@@ -87,25 +89,35 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        //Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
 
         // Draw square
-     /*   mSquare.draw(mMVPMatrix);
+        mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
 //        long time = SystemClock.uptimeMillis() % 4000L;
 //        float angle = 0.090f * ((int) time);
+//        mAngle = angle;
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
 
         // Combine the rotation matrix with the projection and camera view
         Matrix.multiplyMM(mMVPMatrix, 0, mRotationMatrix, 0, mMVPMatrix, 0);
 
+        float textScale = 0.5f;
+        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, textScale);
+        Matrix.multiplyMM(mMVPMatrix, 0, mScaleMatrix, 0, mMVPMatrix, 0);
+
+
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
-           */
+
+//        float textScale = 1.0f;
+//        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, textScale);
+//        Matrix.multiplyMM(mMVPMatrix, 0, mScaleMatrix, 0, mVMatrix, 0);
+
         // TEST: render the entire font texture
         glText.drawTexture( width/2, height/2, mMVPMatrix);            // Draw the Entire Texture
 
@@ -129,33 +141,21 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);
 
-        float ratio = (float) width / height;
-
-        // this projection matrix is applied to object coordinates
-        // in the onDrawFrame() method
-      //  Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-
         this.width = width;
         this.height = height;
 
+        float ratio = (float) width / height;
+        float near = 1, far = 30;
 
-        // Take into account device orientation
+        // this projection matrix is applied to object coordinates
+        // in the onDrawFrame() method
+
         if (width > height) {
-            Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 1, 10);
+            Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, near, far);
         }
         else {
-            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1/ratio, 1/ratio, 1, 10);
+            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1/ratio, 1/ratio, near, far);
         }
-
-        int useForOrtho = Math.min(width, height);
-
-        //TODO: Is this wrong?
-        Matrix.orthoM(mVMatrix, 0,
-                -useForOrtho/2,
-                useForOrtho/2,
-                -useForOrtho/2,
-                useForOrtho/2, 0.1f, 100f);
-
     }
 
     public static int loadShader(int type, String shaderCode) {
