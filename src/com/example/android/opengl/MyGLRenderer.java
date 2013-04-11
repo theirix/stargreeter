@@ -25,17 +25,22 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
+import com.example.android.opengl.gltext.GLText;
 
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MyGLRenderer";
     private final Context mContext;
     private Triangle mTriangle;
-    private Square   mSquare;
+    private Square mSquare;
 
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
@@ -44,10 +49,13 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
-    private TexFont m_TexFont;
+    private GLText glText;
+    private int width;
+    private int height;
 
     public MyGLRenderer(Context context) {
         mContext = context;
+        width = height = 200;
     }
 
     @Override
@@ -57,21 +65,19 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         mTriangle = new Triangle();
-        mSquare   = new Square();
+        mSquare = new Square();
+
+        // Create the GLText
+        glText = new GLText(mContext.getAssets());
+
+        // Load the font from file (set size + padding), creates the texture
+        // NOTE: after a successful call to this the font is ready for rendering!
+        glText.load( "Roboto-Regular.ttf", 14, 2, 2 );  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 
-        m_TexFont = new TexFont(mContext, gl);
-
-        try
-        {
-            m_TexFont.LoadFont("TimesNewRoman.bff", gl);
-        } catch (java.io.EOFException e)
-        {
-            Log.d(TAG, "Caught EOFException");
-        } catch (java.io.IOException e)
-        {
-            Log.d(TAG, "Caught IOException");
-        }
     }
 
     @Override
@@ -81,13 +87,13 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        //Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
 
         // Draw square
-        mSquare.draw(mMVPMatrix);
+     /*   mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
 //        long time = SystemClock.uptimeMillis() % 4000L;
@@ -99,9 +105,21 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
+           */
+        // TEST: render the entire font texture
+        glText.drawTexture( width/2, height/2, mMVPMatrix);            // Draw the Entire Texture
 
-        m_TexFont.SetPolyColor(0.5f, 0.5f, 0.5f);
-        m_TexFont.PrintAt(gl, "Hello world", 0, 0);
+        // TEST: render some strings with the font
+        glText.begin( 0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix );         // Begin Text Rendering (Set Color WHITE)
+        glText.drawC( "Test String :)", 0, 0, 10 );          // Draw Test String
+        glText.draw( "Line 1", 50, 50, 40);                // Draw Test String
+        glText.draw( "Column 1", 100, 100, 90);              // Draw Test String
+        glText.end();                                   // End Text Rendering
+
+        glText.begin( 0.0f, 0.0f, 1.0f, 1.0f, mMVPMatrix );         // Begin Text Rendering (Set Color BLUE)
+        glText.draw( "More Lines...", 50, 40 );        // Draw Test String
+        glText.draw( "The End.", 50, 40 + glText.getCharHeight(), 180);  // Draw Test String
+        glText.end();
 
     }
 
@@ -115,11 +133,32 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
-        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+      //  Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+
+        this.width = width;
+        this.height = height;
+
+
+        // Take into account device orientation
+        if (width > height) {
+            Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 1, 10);
+        }
+        else {
+            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1/ratio, 1/ratio, 1, 10);
+        }
+
+        int useForOrtho = Math.min(width, height);
+
+        //TODO: Is this wrong?
+        Matrix.orthoM(mVMatrix, 0,
+                -useForOrtho/2,
+                useForOrtho/2,
+                -useForOrtho/2,
+                useForOrtho/2, 0.1f, 100f);
 
     }
 
-    public static int loadShader(int type, String shaderCode){
+    public static int loadShader(int type, String shaderCode) {
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -135,7 +174,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     /**
      * Utility method for debugging OpenGL calls. Provide the name of the call
      * just after making it:
-     *
+     * <p/>
      * <pre>
      * mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
      * MyGLRenderer.checkGlError("glGetUniformLocation");</pre>
@@ -156,22 +195,22 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 class Triangle {
 
     private final String vertexShaderCode =
-        // This matrix member variable provides a hook to manipulate
-        // the coordinates of the objects that use this vertex shader
-        "uniform mat4 uMVPMatrix;" +
+            // This matrix member variable provides a hook to manipulate
+            // the coordinates of the objects that use this vertex shader
+            "uniform mat4 uMVPMatrix;" +
 
-        "attribute vec4 vPosition;" +
-        "void main() {" +
-        // the matrix must be included as a modifier of gl_Position
-        "  gl_Position = vPosition * uMVPMatrix;" +
-        "}";
+                    "attribute vec4 vPosition;" +
+                    "void main() {" +
+                    // the matrix must be included as a modifier of gl_Position
+                    "  gl_Position = vPosition * uMVPMatrix;" +
+                    "}";
 
     private final String fragmentShaderCode =
-        "precision mediump float;" +
-        "uniform vec4 vColor;" +
-        "void main() {" +
-        "  gl_FragColor = vColor;" +
-        "}";
+            "precision mediump float;" +
+                    "uniform vec4 vColor;" +
+                    "void main() {" +
+                    "  gl_FragColor = vColor;" +
+                    "}";
 
     private final FloatBuffer vertexBuffer;
     private final int mProgram;
@@ -182,15 +221,15 @@ class Triangle {
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
     static float triangleCoords[] = { // in counterclockwise order:
-         0.0f,  0.622008459f, 0.0f,   // top
-        -0.5f, -0.311004243f, 0.0f,   // bottom left
-         0.5f, -0.311004243f, 0.0f    // bottom right
+            0.0f, 0.622008459f, 0.0f,   // top
+            -0.5f, -0.311004243f, 0.0f,   // bottom left
+            0.5f, -0.311004243f, 0.0f    // bottom right
     };
     private final int vertexCount = triangleCoords.length / COORDS_PER_VERTEX;
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
     // Set color with red, green, blue and alpha (opacity) values
-    float color[] = { 0.63671875f, 0.76953125f, 0.22265625f, 1.0f };
+    float color[] = {0.63671875f, 0.76953125f, 0.22265625f, 1.0f};
 
     public Triangle() {
         // initialize vertex byte buffer for shape coordinates
@@ -209,9 +248,9 @@ class Triangle {
 
         // prepare shaders and OpenGL program
         int vertexShader = MyGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                                                   vertexShaderCode);
+                vertexShaderCode);
         int fragmentShader = MyGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                                                     fragmentShaderCode);
+                fragmentShaderCode);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -232,8 +271,8 @@ class Triangle {
 
         // Prepare the triangle coordinate data
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
-                                     GLES20.GL_FLOAT, false,
-                                     vertexStride, vertexBuffer);
+                GLES20.GL_FLOAT, false,
+                vertexStride, vertexBuffer);
 
         // get handle to fragment shader's vColor member
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
@@ -260,22 +299,22 @@ class Triangle {
 class Square {
 
     private final String vertexShaderCode =
-        // This matrix member variable provides a hook to manipulate
-        // the coordinates of the objects that use this vertex shader
-        "uniform mat4 uMVPMatrix;" +
+            // This matrix member variable provides a hook to manipulate
+            // the coordinates of the objects that use this vertex shader
+            "uniform mat4 uMVPMatrix;" +
 
-        "attribute vec4 vPosition;" +
-        "void main() {" +
-        // the matrix must be included as a modifier of gl_Position
-        "  gl_Position = vPosition * uMVPMatrix;" +
-        "}";
+                    "attribute vec4 vPosition;" +
+                    "void main() {" +
+                    // the matrix must be included as a modifier of gl_Position
+                    "  gl_Position = vPosition * uMVPMatrix;" +
+                    "}";
 
     private final String fragmentShaderCode =
-        "precision mediump float;" +
-        "uniform vec4 vColor;" +
-        "void main() {" +
-        "  gl_FragColor = vColor;" +
-        "}";
+            "precision mediump float;" +
+                    "uniform vec4 vColor;" +
+                    "void main() {" +
+                    "  gl_FragColor = vColor;" +
+                    "}";
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
@@ -286,22 +325,22 @@ class Square {
 
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
-    static float squareCoords[] = { -0.5f,  0.5f, 0.0f,   // top left
-                                    -0.5f, -0.5f, 0.0f,   // bottom left
-                                     0.5f, -0.5f, 0.0f,   // bottom right
-                                     0.5f,  0.5f, 0.0f }; // top right
+    static float squareCoords[] = {-0.5f, 0.5f, 0.0f,   // top left
+            -0.5f, -0.5f, 0.0f,   // bottom left
+            0.5f, -0.5f, 0.0f,   // bottom right
+            0.5f, 0.5f, 0.0f}; // top right
 
-    private final short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
+    private final short drawOrder[] = {0, 1, 2, 0, 2, 3}; // order to draw vertices
 
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
     // Set color with red, green, blue and alpha (opacity) values
-    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 1.0f };
+    float color[] = {0.2f, 0.709803922f, 0.898039216f, 1.0f};
 
     public Square() {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
-        // (# of coordinate values * 4 bytes per float)
+                // (# of coordinate values * 4 bytes per float)
                 squareCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
@@ -310,7 +349,7 @@ class Square {
 
         // initialize byte buffer for the draw list
         ByteBuffer dlb = ByteBuffer.allocateDirect(
-        // (# of coordinate values * 2 bytes per short)
+                // (# of coordinate values * 2 bytes per short)
                 drawOrder.length * 2);
         dlb.order(ByteOrder.nativeOrder());
         drawListBuffer = dlb.asShortBuffer();
@@ -319,9 +358,9 @@ class Square {
 
         // prepare shaders and OpenGL program
         int vertexShader = MyGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                                                   vertexShaderCode);
+                vertexShaderCode);
         int fragmentShader = MyGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                                                     fragmentShaderCode);
+                fragmentShaderCode);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -341,8 +380,8 @@ class Square {
 
         // Prepare the triangle coordinate data
         GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
-                                     GLES20.GL_FLOAT, false,
-                                     vertexStride, vertexBuffer);
+                GLES20.GL_FLOAT, false,
+                vertexStride, vertexBuffer);
 
         // get handle to fragment shader's vColor member
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
@@ -360,7 +399,7 @@ class Square {
 
         // Draw the square
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length,
-                              GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
