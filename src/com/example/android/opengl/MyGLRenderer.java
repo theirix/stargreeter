@@ -33,6 +33,8 @@ import java.nio.ShortBuffer;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MyGLRenderer";
+    public static final float ZOOM_MIN = 0.05f;
+    public static final float ZOOM_MAX = 10.0f;
     private final Context mContext;
     private Triangle mTriangle;
     private Square mSquare;
@@ -46,6 +48,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     // Declare as volatile because we are updating it from another thread
     public volatile float mAngle;
+    private volatile float mAbsoluteZoom;
+    private volatile float mDistance;
     private GLText glText;
     private int width;
     private int height;
@@ -53,6 +57,32 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public MyGLRenderer(Context context) {
         mContext = context;
         width = height = 0;
+        mAngle = 0;
+        mAbsoluteZoom = 1.0f;
+        mDistance = 2;
+    }
+
+    private double gauss (double x, double mu, double sigma) {
+        return (1.0 / (sigma * Math.sqrt(2*Math.PI)))
+                * Math.exp( - (x-mu)*(x-mu) / (2*mu*mu));
+    }
+
+    public void setCurrentZoom(float currentZoom) {
+        currentZoom = 1.0f + (currentZoom - 1.0f) * (float)gauss(currentZoom, 1.0, 0.5);
+        //currentZoom = Math.max(0.1f, Math.min(currentZoom, 10.0f));
+        mAbsoluteZoom = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
+        //mAbsoluteZoom *= currentZoom;
+        Log.d(TAG, "zoom ongoing, scale: " + mAbsoluteZoom + " cur: " + currentZoom);
+        //if (mAbsoluteZoom >= ZOOM_MIN && mAbsoluteZoom <= ZOOM_MAX)
+        {
+            //mAbsoluteZoom = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
+
+            float a = 10f, b = 1.5f;
+            mDistance = (a + b) / 2
+                    + (mAbsoluteZoom - (ZOOM_MAX + ZOOM_MIN) / 2)
+                    * (b - a) / (ZOOM_MAX - ZOOM_MIN);
+            Log.d(TAG, "distance: " + mDistance);
+        }
     }
 
     @Override
@@ -69,7 +99,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // Load the font from file (set size + padding), creates the texture
         // NOTE: after a successful call to this the font is ready for rendering!
-        glText.load( "Roboto-Regular.ttf", 14, 2, 2 );  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+        glText.load("Roboto-Regular.ttf", 14, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
 
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -84,7 +114,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -mDistance, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
@@ -111,25 +141,25 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         drawText();
     }
 
-    private float[] dupMatrix (float[] input) {
+    private float[] dupMatrix(float[] input) {
         System.arraycopy(input, 0, mTmp, 0, input.length);
         return mTmp;
     }
 
     private void drawText() {
         // TEST: render the entire font texture
-        glText.drawTexture( width/2, height/2, mMVPMatrix);            // Draw the Entire Texture
+        glText.drawTexture(width / 2, height / 2, mMVPMatrix);            // Draw the Entire Texture
 
         // TEST: render some strings with the font
-        glText.begin( 0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix );         // Begin Text Rendering (Set Color WHITE)
-        glText.drawC( "Test String :)", 0, 0, 10 );          // Draw Test String
-        glText.draw( "Line 1", 50, 50, 40);                // Draw Test String
-        glText.draw( "Column 1", 100, 100, 90);              // Draw Test String
+        glText.begin(0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix);         // Begin Text Rendering (Set Color WHITE)
+        glText.drawC("Test String :)", 0, 0, 10);          // Draw Test String
+        glText.draw("Line 1", 50, 50, 40);                // Draw Test String
+        glText.draw("Column 1", 100, 100, 90);              // Draw Test String
         glText.end();                                   // End Text Rendering
 
-        glText.begin( 0.0f, 0.0f, 1.0f, 1.0f, mMVPMatrix );         // Begin Text Rendering (Set Color BLUE)
-        glText.draw( "More Lines...", 50, 40 );        // Draw Test String
-        glText.draw( "The End.", 50, 40 + glText.getCharHeight(), 180);  // Draw Test String
+        glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mMVPMatrix);         // Begin Text Rendering (Set Color BLUE)
+        glText.draw("More Lines...", 50, 40);        // Draw Test String
+        glText.draw("The End.", 50, 40 + glText.getCharHeight(), 180);  // Draw Test String
         glText.end();
     }
 
@@ -150,9 +180,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         if (width > height) {
             Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, near, far);
-        }
-        else {
-            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1/ratio, 1/ratio, near, far);
+        } else {
+            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1 / ratio, 1 / ratio, near, far);
         }
     }
 

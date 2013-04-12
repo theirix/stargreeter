@@ -22,6 +22,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -66,6 +67,8 @@ class MyGLSurfaceView extends GLSurfaceView {
 
     private final MyGLRenderer mRenderer;
 
+    private ScaleGestureDetector mScaleDetector;
+
     public MyGLSurfaceView(Context context) {
         super(context);
 
@@ -79,6 +82,23 @@ class MyGLSurfaceView extends GLSurfaceView {
         // Render the view only when there is a change in the drawing data
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+        mScaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
+            @Override
+            public void onScaleEnd(ScaleGestureDetector detector) {
+            }
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
+                return true;
+            }
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                mRenderer.setCurrentZoom(detector.getScaleFactor());
+                requestRender();
+
+                return false;
+            }
+        });
+
     }
 
 
@@ -91,6 +111,8 @@ class MyGLSurfaceView extends GLSurfaceView {
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
         // interested in events where the touch position changed.
+
+        mScaleDetector.onTouchEvent(e);
 
         float x = e.getX();
         float y = e.getY();
