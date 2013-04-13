@@ -57,7 +57,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private GLText glText;
 
     // zoom limits, should correlate with projection box
-    private static final float DEPTH_MAX = 10f;
+    private static final float DEPTH_MAX = 7f;
     private static final float DEPTH_MIN = 1.0f;
     // does not affect anything
     private static final float ZOOM_MIN = 0.05f;
@@ -266,11 +266,11 @@ class TriangleColored {
                     + "   vec3 lightVector = normalize(u_LightPos - modelViewVertex);        \n"
                     // Calculate the dot product of the light vector and vertex normal. If the normal and light vector are
                     // pointing in the same direction then it will get max illumination.
-                    + "   float diffuse = max(dot(modelViewNormal, lightVector), 0.1);       \n"
+                    + "   float diffuse = max(dot(modelViewNormal, lightVector), 0.5);       \n"
                     // Attenuate the light based on distance.
                     + "   diffuse = diffuse * (1.0 / (1.0 + (0.25 * distance * distance)));  \n"
                     // Multiply the color by the illumination level. It will be interpolated across the triangle.
-                    + "   v_Color = a_Color * 1.0 ;                                       \n"
+                    + "   v_Color = a_Color * diffuse ;                                       \n"
                     // gl_Position is a special variable used to store the final position.
                     // Multiply the vertex by the matrix to get the final point in normalized screen coordinates.
                     + "   gl_Position = u_MVPMatrix * a_Position;                            \n"
@@ -320,9 +320,6 @@ class TriangleColored {
     };
     private final int vertexCount = triangleCoords.length / COORDS_PER_VERTEX;
 
-    // Set color with red, green, blue and alpha (opacity) values
-    float color[] = {0.63671875f, 0.76953125f, 0.22265625f, 1.0f};
-
     public TriangleColored() {
         // initialize vertex byte buffer for shape coordinates
         vertexBuffer = ByteBuffer.allocateDirect(
@@ -356,8 +353,7 @@ class TriangleColored {
         final int fragmentShaderHandle = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 
         mProgram = createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle,
-                new String[] {"a_Position",  "a_Color" });
-                //XXX new String[] {"a_Position",  "a_Color", "a_Normal"});
+                new String[] {"a_Position",  "a_Color", "a_Normal"});
     }
 
     private int compileShader(final int shaderType, final String shaderSource)
@@ -441,7 +437,7 @@ class TriangleColored {
 
 
 
-    private final float[] mLightPosInModelSpace = new float[] {0.0f, 0.0f, 0.0f, 1.0f};
+    private final float[] mLightPosInModelSpace = new float[] {0.0f, 0.0f, 2.0f, 1.0f};
     private final float[] mLightPosInWorldSpace = new float[4];
     private final float[] mLightPosInEyeSpace = new float[4];
 
@@ -467,17 +463,29 @@ class TriangleColored {
         mNormalHandle = GLES20.glGetAttribLocation(mProgram, "a_Normal");
         MyGLRenderer.checkGlError();
 
-      /*  float angleInDegrees = 0;
+
+        float tmp = (SystemClock.uptimeMillis() % (int)(2*Math.PI*1000) )/ 1000.0f;
+        float xoffset = 2.0f * (float)Math.sin(tmp);
+        float yoffset = 2.0f * (float)Math.cos(tmp);
+
 
         // Calculate position of the light. Rotate and then push into the distance.
-        Matrix.setIdentityM(mLightModelMatrix, 0);
-        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, -5.0f);
+        /*Matrix.setIdentityM(mLightModelMatrix, 0);
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 15.0f);
         Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);
-        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 2.0f);
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 10.0f);
 
         Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
         Matrix.multiplyMV(mLightPosInEyeSpace, 0, mvMatrix, 0, mLightPosInWorldSpace, 0);
-                */
+          */
+
+//        mLightPosInEyeSpace[0] = mLightPosInEyeSpace[1] = -1;
+//        mLightPosInEyeSpace[2] = 10; mLightPosInEyeSpace[3] = 1;
+        Matrix.setIdentityM(mLightModelMatrix, 0);
+        Matrix.translateM(mLightModelMatrix, 0, xoffset, yoffset, 0.0f);
+
+        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
+        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mvMatrix, 0, mLightPosInWorldSpace, 0);
 
         // Prepare the triangle coordinate data
         GLES20.glEnableVertexAttribArray(mPositionHandle);
