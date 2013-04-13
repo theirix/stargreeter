@@ -105,6 +105,7 @@ class MyGLSurfaceView extends GLSurfaceView {
 
 
     private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
+    private final float TOUCH_MOVE_FACTOR = 0.01f;
     private float mPreviousX;
     private float mPreviousY;
 
@@ -125,7 +126,7 @@ class MyGLSurfaceView extends GLSurfaceView {
 
                     float dx = x - mPreviousX;
                     float dy = y - mPreviousY;
-
+                    /*
                     // reverse direction of rotation above the mid-line
                     if (y > getHeight() / 2) {
                         dx = dx * -1;
@@ -137,6 +138,8 @@ class MyGLSurfaceView extends GLSurfaceView {
                     }
 
                     mRenderer.mAngle += (dx + dy) * TOUCH_SCALE_FACTOR;  // = 180.0f / 320
+                    */
+                    mRenderer.setCurrentTranslate(dx * TOUCH_MOVE_FACTOR, - dy * TOUCH_MOVE_FACTOR);
                     requestRender();
                 }
         }

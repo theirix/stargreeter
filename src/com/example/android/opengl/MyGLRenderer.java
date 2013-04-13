@@ -20,7 +20,6 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.os.SystemClock;
 import android.util.Log;
 import com.example.android.opengl.gltext.GLText;
 
@@ -34,8 +33,6 @@ import java.nio.ShortBuffer;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MyGLRenderer";
-    public static final float ZOOM_MIN = 0.05f;
-    public static final float ZOOM_MAX = 10.0f;
     private final Context mContext;
     private Triangle mTriangle;
     private Square mSquare;
@@ -43,47 +40,65 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
-    private final float[] mRotationMatrix = new float[16];
+    private final float[] mTranslationMatrix = new float[16];
     private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
-    public volatile float mAngle;
+    //private volatile float mAngle;
+    private volatile float mDX;
+    private volatile float mDY;
     private volatile float mAbsoluteZoom;
     private volatile float mDistance;
+    private volatile String mDisplay;
+
     private GLText glText;
-    private int width;
-    private int height;
+
+    // zoom limits, should correlate with projection box
+    private static final float DEPTH_MAX = 10f;
+    private static final float DEPTH_MIN = 1.0f;
+    // does not affect anything
+    private static final float ZOOM_MIN = 0.05f;
+    private static final float ZOOM_MAX = 5.0f;
+
 
     public MyGLRenderer(Context context) {
         mContext = context;
-        width = height = 0;
-        mAngle = 0;
-        mAbsoluteZoom = 1.0f;
-        mDistance = 2;
+        //mAngle = 0;
+        mDX = mDY = 0;
+        mAbsoluteZoom = ZOOM_MAX;
+        mDistance = calculateDistance(mAbsoluteZoom);
+        mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
     }
 
-    private double gauss (double x, double mu, double sigma) {
-        return (1.0 / (sigma * Math.sqrt(2*Math.PI)))
-                * Math.exp( - (x-mu)*(x-mu) / (2*mu*mu));
+    private double gauss(double x, double mu, double sigma) {
+        return (1.0 / (sigma * Math.sqrt(2 * Math.PI)))
+                * Math.exp(-(x - mu) * (x - mu) / (2 * mu * mu));
     }
 
     public void setCurrentZoom(float currentZoom) {
-        currentZoom = 1.0f + (currentZoom - 1.0f) * (float)gauss(currentZoom, 1.0, 0.5);
+        //currentZoom = 1.0f + (currentZoom - 1.0f) * (float)gauss(currentZoom, 1.0, 0.5);
         //currentZoom = Math.max(0.1f, Math.min(currentZoom, 10.0f));
-        mAbsoluteZoom = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
+        float zoomToBe = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
+        float delta = zoomToBe - mAbsoluteZoom;
+        if (Math.abs(delta) < 1E-3)
+            return;
+        mAbsoluteZoom += delta * 0.05f;
         //mAbsoluteZoom *= currentZoom;
-        Log.d(TAG, "zoom ongoing, scale: " + mAbsoluteZoom + " cur: " + currentZoom);
-        //if (mAbsoluteZoom >= ZOOM_MIN && mAbsoluteZoom <= ZOOM_MAX)
-        {
-            //mAbsoluteZoom = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
+        mDistance = calculateDistance(mAbsoluteZoom);
 
-            float a = 10f, b = 1.5f;
-            mDistance = (a + b) / 2
-                    + (mAbsoluteZoom - (ZOOM_MAX + ZOOM_MIN) / 2)
-                    * (b - a) / (ZOOM_MAX - ZOOM_MIN);
-            Log.d(TAG, "distance: " + mDistance);
-        }
+        mDisplay = String.format("cur=%.1f abs=%.1f", currentZoom, mAbsoluteZoom);
+    }
+
+    public void setCurrentTranslate(float dx, float dy) {
+        mDX += dx;
+        mDY += dy;
+    }
+
+    private static float calculateDistance(float absoluteZoom) {
+        return (DEPTH_MAX + DEPTH_MIN) / 2
+                + (absoluteZoom - (ZOOM_MAX + ZOOM_MIN) / 2)
+                * (DEPTH_MIN - DEPTH_MAX) / (ZOOM_MAX - ZOOM_MIN);
     }
 
     @Override
@@ -112,27 +127,29 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        // 1...4
-        float tmp = (SystemClock.uptimeMillis() % (int)(2*Math.PI*1000) )/ 1000.0f;
-        mDistance = 1.0f + 3.0f * (1 + (float)Math.sin(tmp));
+        //float tmp = (SystemClock.uptimeMillis() % (int)(2*Math.PI*1000) )/ 1000.0f;
+        //mDistance = 1.0f + 3.0f * (1 + (float)Math.sin(tmp));
 
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, mDistance, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-//
-//        // Draw square
-        mSquare.draw(mMVPMatrix);
+
+        // Draw square
+//        mSquare.draw(mMVPMatrix);
 
         // Create a rotation for the triangle
 //        long time = SystemClock.uptimeMillis() % 4000L;
 //        float angle = 0.090f * ((int) time);
 //        mAngle = angle;
-        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
+        //mAngle = 0;
+        //Matrix.setRotateM(mTranslationMatrix, 0, mAngle, 0, 0, -1.0f);
+        Matrix.setIdentityM(mTranslationMatrix, 0);
+        Matrix.translateM(mTranslationMatrix, 0, mDX, mDY, 0);
 
-        // Combine the rotation matrix with the projection and camera view
-        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mRotationMatrix, 0);
+        // Combine the translation matrix with the projection and camera view
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
 
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
@@ -150,8 +167,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     private void drawText() {
-        glText.begin(0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix);
+        glText.begin(0.5f, 0.5f, 0.5f, 1.0f, mMVPMatrix);
         glText.drawC(String.format("%.1f", mDistance), 30, 10, 0);
+        glText.drawC(String.format(mDisplay), 30, 30, 0);
         glText.end();
 
     }
@@ -161,9 +179,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Adjust the viewport based on geometry changes,
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);
-
-        this.width = width;
-        this.height = height;
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
@@ -175,7 +190,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             top /= ratio;
             bottom /= ratio;
         }
-        Matrix.frustumM(mProjMatrix, 0, ratio*bottom, ratio*top, bottom, top, near, far);
+        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, near, far);
     }
 
     public static int loadShader(int type, String shaderCode) {
