@@ -80,16 +80,18 @@ class MyGLSurfaceView extends GLSurfaceView {
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         mScaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
             }
+
             @Override
             public boolean onScaleBegin(ScaleGestureDetector detector) {
                 return true;
             }
+
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 mRenderer.setCurrentZoom(detector.getScaleFactor());
@@ -119,22 +121,24 @@ class MyGLSurfaceView extends GLSurfaceView {
 
         switch (e.getAction()) {
             case MotionEvent.ACTION_MOVE:
+                if (!mScaleDetector.isInProgress()) {
 
-                float dx = x - mPreviousX;
-                float dy = y - mPreviousY;
+                    float dx = x - mPreviousX;
+                    float dy = y - mPreviousY;
 
-                // reverse direction of rotation above the mid-line
-                if (y > getHeight() / 2) {
-                  dx = dx * -1 ;
+                    // reverse direction of rotation above the mid-line
+                    if (y > getHeight() / 2) {
+                        dx = dx * -1;
+                    }
+
+                    // reverse direction of rotation to left of the mid-line
+                    if (x < getWidth() / 2) {
+                        dy = dy * -1;
+                    }
+
+                    mRenderer.mAngle += (dx + dy) * TOUCH_SCALE_FACTOR;  // = 180.0f / 320
+                    requestRender();
                 }
-
-                // reverse direction of rotation to left of the mid-line
-                if (x < getWidth() / 2) {
-                  dy = dy * -1 ;
-                }
-
-                mRenderer.mAngle += (dx + dy) * TOUCH_SCALE_FACTOR;  // = 180.0f / 320
-                requestRender();
         }
 
         mPreviousX = x;

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 import android.util.Log;
 import com.example.android.opengl.gltext.GLText;
 
@@ -103,8 +104,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-
     }
 
     @Override
@@ -113,8 +112,12 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
+        // 1...4
+        float tmp = (SystemClock.uptimeMillis() % 4000L) / 1000.0f / 1;
+        mDistance = 1.5f + 4.0f * (1 + (float)Math.sin(tmp));
+
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mVMatrix, 0, 0, 0, -mDistance, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mVMatrix, 0, 0, 0, mDistance, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
@@ -134,7 +137,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Draw triangle
         mTriangle.draw(mMVPMatrix);
 
-        float textScale = 0.01f;
+        float textScale = 0.03f;
         Matrix.setIdentityM(mScaleMatrix, 0);
         Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
         Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
@@ -147,20 +150,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     private void drawText() {
-        // TEST: render the entire font texture
-        glText.drawTexture(width / 2, height / 2, mMVPMatrix);            // Draw the Entire Texture
-
-        // TEST: render some strings with the font
-        glText.begin(0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix);         // Begin Text Rendering (Set Color WHITE)
-        glText.drawC("Test String :)", 0, 0, 10);          // Draw Test String
-        glText.draw("Line 1", 50, 50, 40);                // Draw Test String
-        glText.draw("Column 1", 100, 100, 90);              // Draw Test String
-        glText.end();                                   // End Text Rendering
-
-        glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mMVPMatrix);         // Begin Text Rendering (Set Color BLUE)
-        glText.draw("More Lines...", 50, 40);        // Draw Test String
-        glText.draw("The End.", 50, 40 + glText.getCharHeight(), 180);  // Draw Test String
+        glText.begin(0.5f, 0.5f, 0.5f, 0.5f, mMVPMatrix);
+        glText.drawC(String.format("%.1f", mDistance), 30, 10, 0);
         glText.end();
+
     }
 
     @Override
