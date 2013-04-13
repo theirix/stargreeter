@@ -167,7 +167,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     private void drawText() {
-        glText.begin(0.5f, 0.5f, 0.5f, 1.0f, mMVPMatrix);
+        glText.begin(1,1,1, 1.0f, mMVPMatrix);
         glText.drawC(String.format("%.1f", mDistance), 30, 10, 0);
         glText.drawC(String.format(mDisplay), 30, 30, 0);
         glText.end();
@@ -227,6 +227,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 }
 
+@SuppressWarnings("FieldCanBeLocal")
 class Triangle {
 
     private final String vertexShaderCode =
