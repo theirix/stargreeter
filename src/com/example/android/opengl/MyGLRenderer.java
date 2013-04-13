@@ -113,8 +113,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         // 1...4
-        float tmp = (SystemClock.uptimeMillis() % 4000L) / 1000.0f / 1;
-        mDistance = 1.5f + 4.0f * (1 + (float)Math.sin(tmp));
+        float tmp = (SystemClock.uptimeMillis() % (int)(2*Math.PI*1000) )/ 1000.0f;
+        mDistance = 1.0f + 3.0f * (1 + (float)Math.sin(tmp));
 
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, mDistance, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
@@ -165,17 +165,17 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         this.width = width;
         this.height = height;
 
-        float ratio = (float) width / height;
-        float near = 1, far = 30;
-
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
 
-        if (width > height) {
-            Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, near, far);
-        } else {
-            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1 / ratio, 1 / ratio, near, far);
+        float ratio = (float) width / height;
+        float near = 1, far = 30;
+        float top = 1, bottom = -1;
+        if (width < height) {
+            top /= ratio;
+            bottom /= ratio;
         }
+        Matrix.frustumM(mProjMatrix, 0, ratio*bottom, ratio*top, bottom, top, near, far);
     }
 
     public static int loadShader(int type, String shaderCode) {
