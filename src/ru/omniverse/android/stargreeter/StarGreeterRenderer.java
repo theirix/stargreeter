@@ -27,8 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
-    private static final String TAG = "StarGreeterRenderer";
-    private final Context mContext;
+//    private static final String TAG = "StarGreeterRenderer";
     private final ResourceLoader mResourceLoader;
 
     //private Triangle mTriangle;
@@ -41,7 +40,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
-    private final float[] mTranslationMatrix = new float[16];
+//    private final float[] mTranslationMatrix = new float[16];
     private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
@@ -65,20 +64,19 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private boolean mTouched = false;
 
     public StarGreeterRenderer(Context context) {
-        mContext = context;
         //mAngle = 0;
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
         mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
 
-        mResourceLoader = new ResourceLoader(mContext);
+        mResourceLoader = new ResourceLoader(context);
     }
 
-    private double gauss(double x, double mu, double sigma) {
-        return (1.0 / (sigma * Math.sqrt(2 * Math.PI)))
-                * Math.exp(-(x - mu) * (x - mu) / (2 * mu * mu));
-    }
+//    private double gauss(double x, double mu, double sigma) {
+//        return (1.0 / (sigma * Math.sqrt(2 * Math.PI)))
+//                * Math.exp(-(x - mu) * (x - mu) / (2 * mu * mu));
+//    }
 
     public void setCurrentZoom(float currentZoom) {
         mTouched = true;

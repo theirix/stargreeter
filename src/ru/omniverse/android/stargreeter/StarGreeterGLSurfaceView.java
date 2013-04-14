@@ -11,13 +11,14 @@ import android.view.ScaleGestureDetector;
  * Date: 14.04.2013
  * Time: 22:52
  */
+@SuppressWarnings("FieldCanBeLocal")
 class StarGreeterGLSurfaceView extends GLSurfaceView {
 
-    public final String TAG = "StarGreeterGLSurfaceView";
+//    public final String TAG = "StarGreeterGLSurfaceView";
 
     private final StarGreeterRenderer mRenderer;
 
-    private ScaleGestureDetector mScaleDetector;
+    private final ScaleGestureDetector mScaleDetector;
 
     public StarGreeterGLSurfaceView(Context context) {
         super(context);
@@ -54,7 +55,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     }
 
 
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
+    //private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private final float TOUCH_MOVE_FACTOR = 0.01f;
     private float mPreviousX;
     private float mPreviousY;

@@ -17,9 +17,9 @@ class TriangleColored {
 
     private static final String TAG = "StarGreeterTriangleColored";
 
-    private FloatBuffer vertexBuffer;
-    private FloatBuffer colorBuffer;
-    private FloatBuffer normalBuffer;
+    private final FloatBuffer vertexBuffer;
+    private final FloatBuffer colorBuffer;
+    private final FloatBuffer normalBuffer;
     private final int mProgram;
     private final int mPointProgramHandle;
     private int mPositionHandle;
@@ -37,17 +37,17 @@ class TriangleColored {
     static final int COORDS_PER_VERTEX = 3;
     static final int COLORS_PER_VERTEX = 4;
     static final int NORMALS_PER_VERTEX = 3;
-    static float triangleCoords[] = { // in counterclockwise order:
+    static final float[] triangleCoords = { // in counterclockwise order:
             1.0f, 2.622008459f, 0.0f,   // top
             -2.5f, -0.311004243f, 0.0f,   // bottom left
             2.5f, -0.311004243f, 0.0f    // bottom right
     };
-    static float normalCoords[] = { // in counterclockwise order:
+    static final float[] normalCoords = { // in counterclockwise order:
             0, 0, 1,
             0, 0, 1,
             0, 0, 1
     };
-    static float colorsArray[] = { // in counterclockwise order:
+    static final float[] colorsArray = { // in counterclockwise order:
             1.0f, 0.0f, 0.0f, 1.0f,
             0.0f, 1.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f, 1.0f
@@ -72,7 +72,7 @@ class TriangleColored {
     private final float[] mLightPosInWorldSpace = new float[4];
     private final float[] mLightPosInEyeSpace = new float[4];
 
-    private float[] mLightModelMatrix = new float[16];
+    private final float[] mLightModelMatrix = new float[16];
 
 
     public void draw(float[] mvpMatrix, float[] mvMatrix, float[] projMatrix) {

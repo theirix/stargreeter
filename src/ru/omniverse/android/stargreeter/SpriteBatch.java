@@ -135,9 +135,7 @@ public class SpriteBatch {
         Matrix.multiplyMM(mMVPMatrix, 0, mVPMatrix, 0, modelMatrix, 0);
 
         //TODO: make sure numSprites < 24
-        for (int i = 0; i < 16; ++i) {
-            uMVPMatrices[numSprites * 16 + i] = mMVPMatrix[i];
-        }
+        System.arraycopy(mMVPMatrix, 0, uMVPMatrices, numSprites * 16, 16);
 
 
       /*  Matrix.setIdentityM(mLightModelMatrix, 0);

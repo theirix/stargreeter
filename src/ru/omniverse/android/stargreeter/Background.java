@@ -13,6 +13,7 @@ import java.nio.ShortBuffer;
  * Date: 14.04.2013
  * Time: 18:03
  */
+@SuppressWarnings("FieldCanBeLocal")
 class Background {
 
     private final FloatBuffer vertexBuffer;
@@ -28,22 +29,22 @@ class Background {
     private final int[] textures = new int[1];
 
     // number of coordinates per vertex in this array
-    static final int COORDS_PER_VERTEX = 3;
-    static final int TEX_PER_VERTEX = 2;
-    static float squareCoords[] =
+    private static final int COORDS_PER_VERTEX = 3;
+    private static final int TEX_PER_VERTEX = 2;
+    private static final float[] squareCoords =
             {-0.5f, 0.5f, 0.0f,   // top left
                     -0.5f, -0.5f, 0.0f,   // bottom left
                     0.5f, -0.5f, 0.0f,   // bottom right
                     0.5f, 0.5f, 0.0f}; // top right
     // texture coordinates according square: 01, 00, 10, 11
-    private float[] textureCoordinates = new float[]{
+    private final float[] textureCoordinates = new float[]{
             0, 0,
             0, 1,
             1, 1,
             1, 0
     };
     private final short drawOrder[] = {0, 1, 2, 0, 2, 3}; // order to draw vertices
-    private float mScale = 50f;
+    private final float mScale = 50f;
 
     public Background(ResourceLoader loader) {
         // initialize vertex byte buffer for shape coordinates

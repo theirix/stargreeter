@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class ResourceLoader {
+class ResourceLoader {
 
-    public static final String TAG = "StarGreeterResourceLoader";
+    private static final String TAG = "StarGreeterResourceLoader";
 
     private final Resources mContextResources;
     private final AssetManager mAssetManager;
