@@ -121,7 +121,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         // Load the font from file (set size + padding), creates the texture
         // NOTE: after a successful call to this the font is ready for rendering!
-        glText.load("Roboto-Regular.ttf", 14, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+        glText.load("Federation.ttf", 50, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
     }
 
     @Override
@@ -130,6 +130,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         //GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        float[] mPrev = new float[16];
 
         float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
         mDistance = 1.0f + 3.0f * (1 + (float) Math.sin(tmp));
@@ -140,30 +141,25 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
 
-        // Draw square
-//        mSquare.draw(mMVPMatrix);
+        System.arraycopy(mMVPMatrix, 0, mPrev, 0, mPrev.length);
 
-        // Create a rotation for the triangle
-//        long time = SystemClock.uptimeMillis() % 4000L;
-//        float angle = 0.090f * ((int) time);
-//        mAngle = angle;
-        //mAngle = 0;
-        //Matrix.setRotateM(mTranslationMatrix, 0, mAngle, 0, 0, -1.0f);
+        float textScale = 100;
+        Matrix.setIdentityM(mScaleMatrix, 0);
+        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
 
-        //Matrix.setIdentityM(mTranslationMatrix, 0);
-        //Matrix.translateM(mTranslationMatrix, 0, mDX, mDY, 0);
         Matrix.setRotateM(mTranslationMatrix, 0, mDX, 0, -1.0f, 0);
-
-        // Combine the translation matrix with the projection and camera view
         Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
 
         // Draw triangle
         mTriangleColored.draw(mMVPMatrix, mVMatrix, mProjMatrix);
 
-        float textScale = 0.03f;
+        System.arraycopy(mPrev, 0, mMVPMatrix, 0, mPrev.length);
+
+        /*float textScale = 0.03f;
         Matrix.setIdentityM(mScaleMatrix, 0);
         Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
-        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);*/
         drawText();
     }
 
@@ -174,8 +170,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private void drawText() {
         glText.begin(1, 1, 1, 1.0f, mMVPMatrix);
-        glText.drawC(String.format("%.1f", mDistance), 30, 10, 0);
-        glText.drawC(String.format(mDisplay), 30, 30, 0);
+        glText.draw(String.format("%.1f", mDistance), 30, 10, 0);
+        glText.draw(String.format(mDisplay), 30, 20 + glText.getCharHeight(), 0);
+        glText.draw("star trek", 30, 20 + 2 * glText.getCharHeight(), 0);
         glText.end();
 
     }
@@ -191,7 +188,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         float ratio = (float) width / height;
         float near = 1, far = 30;
-        float top = 1, bottom = -1;
+        float top = 50, bottom = -top;
         if (width < height) {
             top /= ratio;
             bottom /= ratio;
@@ -308,8 +305,8 @@ class TriangleColored {
     static final int NORMALS_PER_VERTEX = 3;
     static float triangleCoords[] = { // in counterclockwise order:
             0.0f, 0.622008459f, 0.0f,   // top
-            -0.5f, -0.311004243f, 0.0f,   // bottom left
-            0.5f, -0.311004243f, 0.0f    // bottom right
+            -2.5f, -0.311004243f, 0.0f,   // bottom left
+            2.5f, -0.311004243f, 0.0f    // bottom right
     };
     static float normalCoords[] = { // in counterclockwise order:
             0, 0, 1,
@@ -479,8 +476,8 @@ class TriangleColored {
 
 
         float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 100.0f;
-        float xoffset = 0.5f + 0.7f * (float) Math.sin(tmp);
-        float yoffset = 0.7f * (float) Math.sin(1 + tmp);
+        float xoffset = 0.5f + 3f * (float) Math.sin(tmp);
+        float yoffset = 0;// 0.7f * (float) Math.sin(1 + tmp);
 
 
         Matrix.setIdentityM(mLightModelMatrix, 0);
