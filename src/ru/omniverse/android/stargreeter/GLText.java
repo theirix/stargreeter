@@ -15,6 +15,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
+@SuppressWarnings("UnusedDeclaration")
 class GLText {
 
     //--Constants--//
@@ -74,7 +75,7 @@ class GLText {
 
 
         mProgramHandle = Utils.createShaderProgram(resourceLoader, R.raw.font_vertex, R.raw.font_fragment,
-                new String[] { "a_Position", "a_TexCoordinate", "a_MVPMatrixIndex" } );
+                new String[]{"a_Position", "a_TexCoordinate", "a_MVPMatrixIndex"});
 
         batch = new SpriteBatch(CHAR_BATCH_SIZE, mProgramHandle);  // Create Sprite Batch (with Defined Size)
 
@@ -109,43 +110,40 @@ class GLText {
         mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Texture");
     }
 
-    private static int loadTexture(Bitmap bitmap)
-	{
-	    final int[] textureHandle = new int[1];
+    private static int loadTexture(Bitmap bitmap) {
+        final int[] textureHandle = new int[1];
 
-	    GLES20.glGenTextures(1, textureHandle, 0);
+        GLES20.glGenTextures(1, textureHandle, 0);
 
-	    if (textureHandle[0] != 0)
-	    {
+        if (textureHandle[0] != 0) {
 //	        final BitmapFactory.Options options = new BitmapFactory.Options();
 //	        options.inScaled = false;   // No pre-scaling
 
-	        // Read in the resource
+            // Read in the resource
 //	        final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
 
-	        // Bind to the texture in OpenGL
-	        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
+            // Bind to the texture in OpenGL
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
 
-	        // Set filtering
-	        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-	        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-	        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);  // Set U Wrapping
-	        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);  // Set V Wrapping
+            // Set filtering
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);  // Set U Wrapping
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);  // Set V Wrapping
 
-	        // Load the bitmap into the bound texture.
-	        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+            // Load the bitmap into the bound texture.
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
-	        // Recycle the bitmap, since its data has been loaded into OpenGL.
-	        bitmap.recycle();
-	    }
+            // Recycle the bitmap, since its data has been loaded into OpenGL.
+            bitmap.recycle();
+        }
 
-	    if (textureHandle[0] == 0)
-	    {
-	        throw new RuntimeException("Error loading texture.");
-	    }
+        if (textureHandle[0] == 0) {
+            throw new RuntimeException("Error loading texture.");
+        }
 
-	    return textureHandle[0];
-	}
+        return textureHandle[0];
+    }
 
     //--Load Font--//
     // description
@@ -155,14 +153,14 @@ class GLText {
     //    file - Filename of the font (.ttf, .otf) to use. In 'Assets' folder.
     //    size - Requested pixel size of font (height)
     //    padX, padY - Extra padding per character (X+Y Axis); to prevent overlapping characters.
-    public boolean load(String file, int size, int padX, int padY) {
+    public boolean load(String name, int size, int padX, int padY) {
 
         // setup requested values
         fontPadX = padX;                                // Set Requested X Axis Padding
         fontPadY = padY;                                // Set Requested Y Axis Padding
 
         // load the font and setup paint instance for drawing
-        Typeface tf = Typeface.createFromAsset(mResourceLoader.getAssetManager(), file);  // Create the Typeface from Font File
+        Typeface tf = mResourceLoader.loadCachedFont(name);  // Create the Typeface from Font File
         Paint paint = new Paint();                      // Create Android Paint Instance
         paint.setAntiAlias(true);                     // Enable Anti Alias
         paint.setTextSize(size);                      // Set Text Size

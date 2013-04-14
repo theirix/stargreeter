@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<stargreeter>
+    <settings>
+        <slide-time>15</slide-time>
+    </settings>
+
+    <beginning>
+        <text>Hello world!</text>
+        <font size="46">Federation</font>
+    </beginning>
+
+    <slides>
+        <slide>
+            <text>Second slide</text>
+            <font size="46">tkclscrd</font>
+        </slide>
+        <slide>
+            <text>Third slide</text>
+            <font size="46">tkclscrd</font>
+        </slide>
+        <slide>
+            <text>Fourth slide</text>
+            <font size="46">tkclscrd</font>
+        </slide>
+    </slides>
+
+</stargreeter>

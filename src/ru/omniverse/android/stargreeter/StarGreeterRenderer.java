@@ -21,13 +21,14 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.SystemClock;
+import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
-//    private static final String TAG = "StarGreeterRenderer";
+    private static final String TAG = "StarGreeterRenderer";
     private final ResourceLoader mResourceLoader;
 
     //private Triangle mTriangle;
@@ -40,14 +41,14 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
-//    private final float[] mTranslationMatrix = new float[16];
+    //    private final float[] mTranslationMatrix = new float[16];
     private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
     //private volatile float mAngle;
-    private volatile float mDX;
-    private volatile float mDY;
+    @SuppressWarnings("UnusedDeclaration")
+    private volatile float mDX, mDY;
     private volatile float mAbsoluteZoom;
     private volatile float mDistance;
     private volatile String mDisplay;
@@ -130,8 +131,16 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         // Load the font from file (set size + padding), creates the texture
         // NOTE: after a successful call to this the font is ready for rendering!
-        glText.load("Federation.ttf", 50, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+        glText.load("Federation", 50, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
 
+        // Load config
+        StarGreeterData starGreeterData = new StarGreeterData(mResourceLoader.loadXml(R.raw.stargreeter));
+        Log.d(TAG, "starGreeterData = " + starGreeterData);
+
+        // Preload fonts
+        for (Slide slide : starGreeterData.getAllSlides()) {
+            mResourceLoader.loadCachedFont(slide.getFontName());
+        }
     }
 
 
