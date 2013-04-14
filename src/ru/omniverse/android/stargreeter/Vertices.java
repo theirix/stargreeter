@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 
@@ -19,8 +19,6 @@ public class Vertices {
 	
 	final static int INDEX_SIZE = Short.SIZE / 8;      // Index Byte Size (Short.SIZE = bits)
 	
-	private static final String TAG = "Vertices";
-
 	//--Members--//
 	// NOTE: all members are constant, and initialized in constructor!
 	public final int positionCnt;                      // Number of Position Components (2=2D, 3=3D)

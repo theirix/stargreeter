@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 import android.util.Log;
@@ -10,7 +10,7 @@ import java.nio.ShortBuffer;
 
 public class Utils {
 
-    public static final String TAG = "MyGLRendererShaderUtils";
+    public static final String TAG = "StarGreeterUtils";
 
     public static int compileShader(final int shaderType, final String shaderSource) {
         int shaderHandle = GLES20.glCreateShader(shaderType);

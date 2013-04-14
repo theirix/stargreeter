@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.content.Context;
 import android.opengl.GLES20;
@@ -25,9 +25,9 @@ import android.os.SystemClock;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MyGLRenderer implements GLSurfaceView.Renderer {
+public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
-    private static final String TAG = "MyGLRenderer";
+    private static final String TAG = "StarGreeterRenderer";
     private final Context mContext;
     private final ResourceLoader mResourceLoader;
 
@@ -64,7 +64,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private boolean mTouched = false;
 
-    public MyGLRenderer(Context context) {
+    public StarGreeterRenderer(Context context) {
         mContext = context;
         //mAngle = 0;
         mDX = mDY = 0;

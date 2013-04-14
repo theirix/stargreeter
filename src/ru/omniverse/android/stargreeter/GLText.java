@@ -1,4 +1,4 @@
-package com.example.android.opengl;// This is a OpenGL ES 1.0 dynamic font rendering system. It loads actual font
+package ru.omniverse.android.stargreeter;// This is a OpenGL ES 1.0 dynamic font rendering system. It loads actual font
 // files, generates a font map (texture) from them, and allows rendering of
 // text strings.
 //
@@ -30,7 +30,6 @@ public class GLText {
     public final static int CHAR_BATCH_SIZE = 24;     // Number of Characters to Render Per Batch
     // must be the same as the size of u_MVPMatrix
     // in BatchTextProgram
-    private static final String TAG = "GLTEXT";
 
 
     //--Members--//
@@ -156,7 +155,6 @@ public class GLText {
         charWidths[cnt] = w[0];                         // Get Width
         if (charWidths[cnt] > charWidthMax)           // IF Width Larger Than Max Width
             charWidthMax = charWidths[cnt];              // Save New Max Width
-        cnt++;                                          // Advance Array Counter
 
         // set character height to font height
         charHeight = fontHeight;                        // Set Character Height

@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 
 class TextureRegion {

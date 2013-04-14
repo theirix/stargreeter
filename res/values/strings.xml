@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <string name="hello">Hello, OpenGL ES 2.0!</string>
-    <string name="app_name">OpenGL ES 2.0 Complete</string>
+    <string name="hello">Hello from Star Greeter!</string>
+    <string name="app_name">Star Greeter</string>
 
 </resources>

@@ -1,11 +1,9 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.SystemClock;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 /**
@@ -17,7 +15,7 @@ import java.nio.FloatBuffer;
 @SuppressWarnings("FieldCanBeLocal")
 class TriangleColored {
 
-    private static final String TAG = "MyGLRendererTriangleColored";
+    private static final String TAG = "StarGreeterTriangleColored";
 
     private FloatBuffer vertexBuffer;
     private FloatBuffer colorBuffer;
@@ -180,6 +178,6 @@ class TriangleColored {
 
         // Disable vertex array
         //    GLES20.glDisableVertexAttribArray(mPositionHandle);
-        //  MyGLRenderer.checkGlError();
+        //  StarGreeterRenderer.checkGlError();
     }
 }

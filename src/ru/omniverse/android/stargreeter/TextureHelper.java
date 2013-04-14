@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.content.Context;
 import android.graphics.Bitmap;

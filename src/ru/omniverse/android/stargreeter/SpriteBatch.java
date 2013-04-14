@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
@@ -9,7 +9,6 @@ public class SpriteBatch {
     final static int VERTEX_SIZE = 5;                  // Vertex Size (in Components) ie. (X,Y,U,V,M), M is MVP matrix index
     final static int VERTICES_PER_SPRITE = 4;          // Vertices Per Sprite
     final static int INDICES_PER_SPRITE = 6;           // Indices Per Sprite
-    private static final String TAG = "SpriteBatch";
 
     //--Members--//
     Vertices vertices;                                 // Vertices Instance Used for Rendering

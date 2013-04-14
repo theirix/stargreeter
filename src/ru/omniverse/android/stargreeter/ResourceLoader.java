@@ -1,4 +1,4 @@
-package com.example.android.opengl;
+package ru.omniverse.android.stargreeter;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
 
 public class ResourceLoader {
 
-    public static final String TAG = "ResourceLoader";
+    public static final String TAG = "StarGreeterResourceLoader";
 
     private final Resources mContextResources;
     private final AssetManager mAssetManager;
