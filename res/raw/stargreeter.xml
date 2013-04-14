@@ -2,20 +2,26 @@
 <stargreeter>
     <settings>
         <slide-time>15</slide-time>
+        <keep-last-slide>true</keep-last-slide>
     </settings>
 
     <beginning>
-        <text>Hello world!</text>
+        <text>hello world!</text>
         <font size="46">Federation</font>
     </beginning>
 
     <slides>
         <slide>
-            <text>Second slide</text>
+            <text>Second slide
+                And the next lime
+            </text>
             <font size="46">tkclscrd</font>
         </slide>
         <slide>
-            <text>Third slide</text>
+            <text>Third slide
+                Long time ago
+                In far far galaxy...
+            </text>
             <font size="46">tkclscrd</font>
         </slide>
         <slide>

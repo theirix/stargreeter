@@ -25,6 +25,7 @@ import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import java.util.Iterator;
 
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
@@ -51,27 +52,70 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private volatile float mDX, mDY;
     private volatile float mAbsoluteZoom;
     private volatile float mDistance;
-    private volatile String mDisplay;
 
     private GLText glText;
 
+
+    public static final int PROJECTION_SIZE = 150;
+    public static final int FAR_PLANE = 30;
+    public static final int NEAR_PLANE = 1;
+
+
     // zoom limits, should correlate with projection box
-    private static final float DEPTH_MAX = 7f;
-    private static final float DEPTH_MIN = 1.0f;
+    private static final float DEPTH_MAX = FAR_PLANE;
+    private static final float DEPTH_MIN = NEAR_PLANE;
     // does not affect anything
     private static final float ZOOM_MIN = 0.05f;
     private static final float ZOOM_MAX = 5.0f;
 
     private boolean mTouched = false;
 
+    private final StarGreeterData mStarGreeterData;
+    //    private volatile boolean mRequestFlipSlide;
+    private Slide mCurrentSlide;
+    private Iterator<Slide> mSlideIterator;
+//    private final CountDownTimer mCountDownTimer;
+
+    private long mPreviousFlipTick = 0;
+
+
     public StarGreeterRenderer(Context context) {
         //mAngle = 0;
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
-        mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
+        //mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
 
         mResourceLoader = new ResourceLoader(context);
+
+        // Load config
+        mStarGreeterData = new StarGreeterData(mResourceLoader.loadXml(R.raw.stargreeter));
+        Log.d(TAG, "starGreeterData = " + mStarGreeterData);
+
+        // Preload fonts
+        for (Slide slide : mStarGreeterData.getAllSlides()) {
+            mResourceLoader.loadCachedFont(slide.getFontName());
+        }
+
+        // Set to the first slide
+//        mRequestFlipSlide = false;
+        mSlideIterator = mStarGreeterData.getAllSlides().iterator();
+
+//        mCountDownTimer = new CountDownTimer(
+//                (mStarGreeterData.getAllSlides().size() - 1) * mStarGreeterData.getSlideTime() * 1000,
+//                mStarGreeterData.getSlideTime() * 1000) {
+//
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//                Log.d(TAG, "Request slide flipping");
+//                mRequestFlipSlide = true;
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//                Log.d(TAG, "Finished");
+//            }
+//        };
     }
 
 //    private double gauss(double x, double mu, double sigma) {
@@ -92,7 +136,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         //mAbsoluteZoom *= currentZoom;
         mDistance = calculateDistance(mAbsoluteZoom);
 
-        mDisplay = String.format("cur=%.1f abs=%.1f", currentZoom, mAbsoluteZoom);
+        //mDisplay = String.format("cur=%.1f abs=%.1f", currentZoom, mAbsoluteZoom);
     }
 
     public void setCurrentTranslate(float dx, float dy) {
@@ -115,40 +159,45 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         GLES20.glEnable(GLES20.GL_BLEND);
-        //GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        //GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         //GLES20.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
         //GLES20.glEnable(GL10.GL_ALPHA_BITS);
-
-        //mTriangle = new Triangle();
-//        mSquare = new Square();
 
         mBackground = new Background(mResourceLoader);
         mTriangleColored = new TriangleColored(mResourceLoader);
 
-        // Create the GLText
-        glText = new GLText(mResourceLoader);
-
-        // Load the font from file (set size + padding), creates the texture
-        // NOTE: after a successful call to this the font is ready for rendering!
-        glText.load("Federation", 50, 2, 2);  // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
-
-        // Load config
-        StarGreeterData starGreeterData = new StarGreeterData(mResourceLoader.loadXml(R.raw.stargreeter));
-        Log.d(TAG, "starGreeterData = " + starGreeterData);
-
-        // Preload fonts
-        for (Slide slide : starGreeterData.getAllSlides()) {
-            mResourceLoader.loadCachedFont(slide.getFontName());
-        }
+//        mCountDownTimer.start();
     }
 
 
     @Override
     public void onDrawFrame(GL10 unused) {
 
+        // Flip to the next side
+        long currentTick = SystemClock.elapsedRealtime();
+        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000) {
+            mPreviousFlipTick = currentTick;
+
+            if (mSlideIterator.hasNext()) {
+                mCurrentSlide = mSlideIterator.next();
+                Log.d(TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
+            } else if (!mStarGreeterData.isKeepLastSlide()) {
+                mCurrentSlide = null;
+            }
+
+            if (mCurrentSlide != null) {
+                glText = new GLText(mResourceLoader);
+                // Load the font from file (set size + padding), creates the texture
+                // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+                glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
+            }
+        }
+        if (glText == null) {
+            throw new RuntimeException("GLText had not created yet");
+        }
+
         // Draw background color
-        //GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         float[] mPrev = new float[16];
 
@@ -158,7 +207,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
             mDistance = 1.0f + 3.0f * (1 + (float) Math.sin(tmp));
         }
-
 
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, mDistance, 0f, 0f, 1.0f, 0f, 1.0f, 0.0f);
@@ -187,8 +235,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
         Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);*/
         drawText();
-
-
     }
 
     private float[] dupMatrix(float[] input) {
@@ -197,11 +243,21 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     }
 
     private void drawText() {
-        glText.begin(1, 1, 1, 0.5f, mMVPMatrix);
-        glText.draw(String.format("%.1f", mDistance), 30, 10, 0);
-        glText.draw(String.format(mDisplay), 50, 20 + glText.getCharHeight(), 0);
-        glText.draw("star trek", -120, -10, 0);
-        glText.end();
+
+        if (mCurrentSlide != null) {
+            glText.begin(1, 1, 1, 0.5f, mMVPMatrix);
+
+            final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
+            for (int i = 0; i < strings.length; i++) {
+                String string = strings[i].trim();
+                glText.draw(string, 0, 10 - i * glText.getCharHeight(), 0);
+            }
+
+            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
+//            glText.draw(String.format(mDisplay), 50, 20 + glText.getCharHeight(), 0);
+//            glText.draw("star trek", -120, -10, 0);
+            glText.end();
+        }
 
     }
 
@@ -215,13 +271,12 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         // in the onDrawFrame() method
 
         float ratio = (float) width / height;
-        float near = 1, far = 30;
-        float top = 75, bottom = -top;
+        float top = PROJECTION_SIZE / 2, bottom = -top;
         if (width < height) {
             top /= ratio;
             bottom /= ratio;
         }
-        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, near, far);
+        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, (float) NEAR_PLANE, (float) FAR_PLANE);
     }
 
 }

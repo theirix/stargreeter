@@ -11,50 +11,11 @@ import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 14.04.2013
- * Time: 23:57
- */
-
-class Slide {
-    private final String text;
-    private final String fontName;
-    private final int fontSize;
-
-    public Slide(String text, String fontName, int fontSize) {
-        this.text = text;
-        this.fontName = fontName;
-        this.fontSize = fontSize;
-    }
-
-    String getText() {
-        return text;
-    }
-
-    String getFontName() {
-        return fontName;
-    }
-
-    int getFontSize() {
-        return fontSize;
-    }
-
-    @Override
-    public String toString() {
-        return "Slide{" +
-                "text='" + getText() + '\'' +
-                ", fontName='" + getFontName() + '\'' +
-                ", fontSize=" + getFontSize() +
-                '}';
-    }
-}
-
 public class StarGreeterData {
 
     private final List<Slide> slides;
     private final int slideTime;
+    private final boolean keepLastSlide;
 
     public StarGreeterData(Document document) {
 
@@ -76,6 +37,8 @@ public class StarGreeterData {
 
             slideTime = Integer.parseInt((String) xPath.evaluate("/stargreeter/settings/slide-time",
                     document, XPathConstants.STRING));
+            keepLastSlide = (Boolean) xPath.evaluate("/stargreeter/settings/keep-last-slide",
+                    document, XPathConstants.BOOLEAN);
 
         } catch (XPathExpressionException e) {
             throw new RuntimeException("Can not parse settings", e);
@@ -106,12 +69,17 @@ public class StarGreeterData {
         return slideTime;
     }
 
+    public boolean isKeepLastSlide() {
+        return keepLastSlide;
+    }
+
     @Override
     public String toString() {
         return "StarGreeterData{" +
                 "beginning=" + getBeginning() +
                 ", slides=" + getSlides() +
                 ", slideTime=" + getSlideTime() +
+                ", keepLastSlide=" + isKeepLastSlide() +
                 '}';
     }
 }
