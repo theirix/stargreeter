@@ -20,12 +20,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 public class OpenGLES20Complete extends Activity {
 
@@ -139,7 +135,7 @@ class MyGLSurfaceView extends GLSurfaceView {
 
                     mRenderer.mAngle += (dx + dy) * TOUCH_SCALE_FACTOR;  // = 180.0f / 320
                     */
-                    mRenderer.setCurrentTranslate(dx * TOUCH_MOVE_FACTOR, - dy * TOUCH_MOVE_FACTOR);
+                    mRenderer.setCurrentTranslate(dx * TOUCH_MOVE_FACTOR, -dy * TOUCH_MOVE_FACTOR);
                     requestRender();
                 }
         }
