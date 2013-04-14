@@ -17,13 +17,10 @@
 package com.example.android.opengl;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.SystemClock;
-import com.example.android.opengl.gltext.GLText;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -32,7 +29,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MyGLRenderer";
     private final Context mContext;
-    private Triangle mTriangle;
+    private final ResourceLoader mResourceLoader;
+
+    //private Triangle mTriangle;
     //private Square mSquare;
     private TriangleColored mTriangleColored;
 
@@ -72,6 +71,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
         mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
+
+        mResourceLoader = new ResourceLoader(mContext);
     }
 
     private double gauss(double x, double mu, double sigma) {
@@ -123,16 +124,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //mTriangle = new Triangle();
 //        mSquare = new Square();
 
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inScaled = false;   // No pre-scaling
-        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(),
-                R.drawable.background, options);
-
-        mBackground = new Background(bitmap);
-        mTriangleColored = new TriangleColored();
+        mBackground = new Background(mResourceLoader);
+        mTriangleColored = new TriangleColored(mResourceLoader);
 
         // Create the GLText
-        glText = new GLText(mContext.getAssets());
+        glText = new GLText(mResourceLoader);
 
         // Load the font from file (set size + padding), creates the texture
         // NOTE: after a successful call to this the font is ready for rendering!

@@ -3,6 +3,11 @@ package com.example.android.opengl;
 import android.opengl.GLES20;
 import android.util.Log;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+
 public class Utils {
 
     public static final String TAG = "MyGLRendererShaderUtils";
@@ -76,9 +81,18 @@ public class Utils {
         return programHandle;
     }
 
+    public static int createShaderProgram(ResourceLoader loader, final int vertexShaderResourceId, final int fragmentShaderResourceId,
+                                          final String[] attributes) {
+        final int vertexShaderHandle = Utils.compileShader(GLES20.GL_VERTEX_SHADER, loader.loadShader(vertexShaderResourceId));
+        final int fragmentShaderHandle = Utils.compileShader(GLES20.GL_FRAGMENT_SHADER, loader.loadShader(fragmentShaderResourceId));
+        return Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle,
+                attributes);
+    }
+
 
     public static void checkGlError(String glOperation) {
         int error;
+        //noinspection LoopStatementThatDoesntLoop
         while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
             Log.e(TAG, glOperation + ": glError " + error);
             throw new RuntimeException(glOperation + ": glError " + error);
@@ -87,5 +101,19 @@ public class Utils {
 
     public static void checkGlError() {
         checkGlError("unnamed");
+    }
+
+    public static FloatBuffer newFloatBuffer(float[] verticesData) {
+		FloatBuffer buffer = ByteBuffer.allocateDirect(verticesData.length * 4)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+        buffer.put(verticesData).position(0);
+		return buffer;
+	}
+
+    public static ShortBuffer newShortBuffer(short[] verticesData) {
+        ShortBuffer buffer = ByteBuffer.allocateDirect(verticesData.length * 2)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        buffer.put(verticesData).position(0);
+        return buffer;
     }
 }

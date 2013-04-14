@@ -12,7 +12,7 @@ import java.nio.FloatBuffer;
  * Date: 14.04.2013
  * Time: 18:03
  */
-@SuppressWarnings("FieldCanBeLocal")
+@Deprecated
 class Triangle {
 
     private final String vertexShaderCode =
@@ -53,20 +53,7 @@ class Triangle {
     float color[] = {0.63671875f, 0.76953125f, 0.22265625f, 1.0f};
 
     public Triangle() {
-        // initialize vertex byte buffer for shape coordinates
-        ByteBuffer bb = ByteBuffer.allocateDirect(
-                // (number of coordinate values * 4 bytes per float)
-                triangleCoords.length * 4);
-        // use the device hardware's native byte order
-        bb.order(ByteOrder.nativeOrder());
-
-        // create a floating point buffer from the ByteBuffer
-        vertexBuffer = bb.asFloatBuffer();
-        // add the coordinates to the FloatBuffer
-        vertexBuffer.put(triangleCoords);
-        // set the buffer to read the first coordinate
-        vertexBuffer.position(0);
-
+        vertexBuffer = Utils.newFloatBuffer(triangleCoords);
 
         final int vertexShaderHandle = Utils.compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         final int fragmentShaderHandle = Utils.compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);

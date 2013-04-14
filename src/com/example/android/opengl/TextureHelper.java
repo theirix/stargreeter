@@ -1,4 +1,4 @@
-package com.example.android.opengl.gltext;
+package com.example.android.opengl;
 
 import android.content.Context;
 import android.graphics.Bitmap;

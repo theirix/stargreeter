@@ -17,25 +17,6 @@ import java.nio.ShortBuffer;
  */
 class Background {
 
-    private final String vertexShaderCode =
-            "attribute vec4 a_Position;\n" +
-                    "attribute vec2 a_TexCoordinate; \n" +
-                    "varying vec2 v_TexCoordinate; \n" +
-                    "uniform float u_Scale; \n" +
-                    "void main()\n" +
-                    "{\n" +
-                    "    gl_Position = a_Position;\n" +
-                    "    v_TexCoordinate = a_TexCoordinate * u_Scale;\n" +
-                    "}";
-
-    private final String fragmentShaderCode =
-            "precision mediump float;\n" +
-                    "uniform sampler2D u_Texture; \n" +
-                    "varying vec2 v_TexCoordinate; \n" +
-                    "void main() { \n" +
-                    "  gl_FragColor = texture2D(u_Texture, v_TexCoordinate); \n" +
-                    "} \n";
-
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
     private FloatBuffer textureBuffer;
@@ -66,25 +47,19 @@ class Background {
     private final short drawOrder[] = {0, 1, 2, 0, 2, 3}; // order to draw vertices
     private float mScale = 50f;
 
-    public Background(Bitmap bitmap) {
+    public Background(ResourceLoader loader) {
         // initialize vertex byte buffer for shape coordinates
-        vertexBuffer = ByteBuffer.allocateDirect(squareCoords.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         for (int i = 0; i < squareCoords.length; i++) {
             squareCoords[i] *= mScale;
         }
-        vertexBuffer.put(squareCoords);
-        vertexBuffer.position(0);
+        vertexBuffer = Utils.newFloatBuffer(squareCoords);
 
         // initialize byte buffer for the draw list
-        drawListBuffer = ByteBuffer.allocateDirect(drawOrder.length * 2).order(ByteOrder.nativeOrder()).asShortBuffer();
-        drawListBuffer.put(drawOrder);
-        drawListBuffer.position(0);
+        drawListBuffer = Utils.newShortBuffer(drawOrder);
 
-        loadBackgroundTexture(bitmap);
+        loadBackgroundTexture(loader.loadBitmap(R.drawable.background));
 
-        final int vertexShaderHandle = Utils.compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-        final int fragmentShaderHandle = Utils.compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
-        mProgram = Utils.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle,
+        mProgram = Utils.createShaderProgram(loader, R.raw.background_vertex, R.raw.background_fragment,
                 new String[]{"a_Position", "a_TexCoordinate"});
     }
 
@@ -112,9 +87,7 @@ class Background {
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
         Utils.checkGlError();
 
-        textureBuffer = ByteBuffer.allocateDirect(textureCoordinates.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        textureBuffer.put(textureCoordinates);
-        textureBuffer.position(0);
+        textureBuffer = Utils.newFloatBuffer(textureCoordinates);
 
         bitmap.recycle();
     }
