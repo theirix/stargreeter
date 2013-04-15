@@ -44,7 +44,7 @@ class Background {
             1, 0
     };
     private final short drawOrder[] = {0, 1, 2, 0, 2, 3}; // order to draw vertices
-    private final float mScale = 50f;
+    private static final float mScale = 50f;
 
     public Background(ResourceLoader loader) {
         // initialize vertex byte buffer for shape coordinates

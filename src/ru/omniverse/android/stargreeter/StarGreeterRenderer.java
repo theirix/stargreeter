@@ -31,6 +31,7 @@ import java.util.Iterator;
 @SuppressWarnings("UnusedDeclaration")
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
+    public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
     private final ResourceLoader mResourceLoader;
 
     //private Triangle mTriangle;
@@ -107,7 +108,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         float delta = zoomToBe - mAbsoluteZoom;
         if (Math.abs(delta) < 1E-3)
             return;
-        mAbsoluteZoom += delta * 0.05f;
+        mAbsoluteZoom += delta * ZOOM_SMOOTH_FACTOR;
         //mAbsoluteZoom *= currentZoom;
         mDistance = calculateDistance(mAbsoluteZoom);
 
