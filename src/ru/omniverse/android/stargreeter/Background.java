@@ -3,6 +3,7 @@ package ru.omniverse.android.stargreeter;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -31,7 +32,7 @@ class Background {
     // number of coordinates per vertex in this array
     private static final int COORDS_PER_VERTEX = 3;
     private static final int TEX_PER_VERTEX = 2;
-    private static final float[] squareCoords =
+    private final float[] squareCoords =
             {-0.5f, 0.5f, 0.0f,   // top left
                     -0.5f, -0.5f, 0.0f,   // bottom left
                     0.5f, -0.5f, 0.0f,   // bottom right
@@ -64,6 +65,7 @@ class Background {
 
     private void loadBackgroundTexture(Bitmap bitmap) {
 
+        Log.d(Utils.TAG, "Bitmap " + Utils.bitmapHash(bitmap));
         // Create an int array with the number of textures we want, in this case 1.
         // Tell OpenGL to generate textures.
         GLES20.glGenTextures(1, textures, 0);
@@ -89,6 +91,10 @@ class Background {
         textureBuffer = Utils.newFloatBuffer(textureCoordinates);
 
         bitmap.recycle();
+
+        if (textures[0] == 0) {
+            throw new RuntimeException("Error loading texture.");
+        }
     }
 
     public void draw() {

@@ -32,16 +32,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     private final ResourceLoader mResourceLoader;
 
-    private TriangleColored mTriangleColored;
-
     private Background mBackground;
-
 
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
     private final float[] mTranslationMatrix = new float[16];
-    private final float[] mScaleMatrix = new float[16];
+    //private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
@@ -169,10 +166,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
                 mTouched = false;
 
-                glText = new GLText(mResourceLoader);
-                // Load the font from file (set size + padding), creates the texture
-                // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
-                glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
+                createGLText();
             }
         }
 
@@ -180,6 +174,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             throw new RuntimeException("GLText had not created yet");
         }
 
+    }
+
+    private void createGLText() {
+        glText = new GLText(mResourceLoader);
+        // Load the font from file (set size + padding), creates the texture
+        // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+        glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
     }
 
     public void resetView() {
@@ -209,7 +210,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         //GLES20.glEnable(GL10.GL_ALPHA_BITS);
 
         mBackground = new Background(mResourceLoader);
-        mTriangleColored = new TriangleColored(mResourceLoader);
+//        mTriangleColored = new TriangleColored(mResourceLoader);
+
+        Log.d(Utils.TAG, "Context recreated");
+        if (glText != null) {
+            Log.d(Utils.TAG, "Create gltext");
+            createGLText();
+        }
     }
 
     @Override
@@ -285,7 +292,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         drawText();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
+    /*@SuppressWarnings("UnusedDeclaration")
     private void drawTriangle() {
         // save mvp matrix
         float[] mPrev = new float[16];
@@ -303,7 +310,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mTriangleColored.draw(mMVPMatrix, mVMatrix, mProjMatrix);
 
         Utils.copyVector(mPrev, mMVPMatrix);
-    }
+    }*/
 
     private void drawText() {
           /*
@@ -341,6 +348,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
+        Log.d(Utils.TAG, "Surface changed");
+
         // Adjust the viewport based on geometry changes,
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);

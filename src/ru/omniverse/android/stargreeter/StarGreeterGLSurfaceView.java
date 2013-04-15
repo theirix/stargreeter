@@ -27,6 +27,8 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         // Create an OpenGL ES 2.0 context.
         setEGLContextClientVersion(2);
 
+        setDebugFlags(DEBUG_CHECK_GL_ERROR);
+
         // Set the Renderer for drawing on the GLSurfaceView
         mRenderer = new StarGreeterRenderer(context);
         setRenderer(mRenderer);
@@ -59,7 +61,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         });
     }
 
-    private static final float TOUCH_MOVE_FACTOR = 0.1f;
+    private static final float TOUCH_MOVE_FACTOR = 0.5f;
     private float mPreviousX;
     private float mPreviousY;
 

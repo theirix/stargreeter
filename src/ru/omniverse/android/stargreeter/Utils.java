@@ -1,12 +1,16 @@
 package ru.omniverse.android.stargreeter;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.util.Log;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Utils {
 
@@ -124,5 +128,23 @@ public class Utils {
         if (src.length != dest.length)
             throw new IllegalArgumentException("Vector size mismatch");
         System.arraycopy(src, 0, dest, 0, src.length);
+    }
+
+    static String bitmapHash(Bitmap bitmap) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            ByteBuffer b = ByteBuffer.allocate(4);
+            for (int i = 0; i < bitmap.getWidth(); i++) {
+                for (int j = 0; j < bitmap.getHeight(); j++) {
+                    b.clear();
+                    b.putInt(bitmap.getPixel(i, j));
+                    digest.update(b);
+                }
+            }
+            return new BigInteger(1, digest.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
