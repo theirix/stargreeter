@@ -46,8 +46,14 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                Log.d(Utils.TAG, "Double tap reseta a view");
-                mRenderer.resetView();
+                final int RESET_TAP_THRESHOLD = 50;
+                if (e.getX() < RESET_TAP_THRESHOLD && e.getY() < RESET_TAP_THRESHOLD) {
+                    Log.d(Utils.TAG, "Double tap in a top-left corner resets an app");
+                    mRenderer.resetApp();
+                } else {
+                    Log.d(Utils.TAG, "Double tap reseta a view");
+                    mRenderer.resetView();
+                }
                 return true;
             }
         });

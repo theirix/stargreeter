@@ -67,9 +67,10 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     private final StarGreeterData mStarGreeterData;
     private Slide mCurrentSlide;
+    private final Object listLock = new Object();
     private Iterator<Slide> mSlideIterator;
 
-    private long mPreviousFlipTick = 0;
+    private volatile long mPreviousFlipTick = 0;
 
     // Lighting movement stuff
     private boolean mFixedLighting;
@@ -139,18 +140,22 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private void flipSlideIfNeeded() {
         // Flip to the next side
         long currentTick = SystemClock.elapsedRealtime();
-        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000 &&
-                mSlideIterator.hasNext()) {
-            mPreviousFlipTick = currentTick;
+        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000) {
 
-            if (mSlideIterator.hasNext()) {
-                mCurrentSlide = mSlideIterator.next();
-                Log.d(Utils.TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
-            } else if (!mStarGreeterData.isKeepLastSlide()) {
-                mCurrentSlide = null;
+            Slide slide = null;
+            synchronized (listLock) {
+                if (mSlideIterator.hasNext()) {
+                    slide = mSlideIterator.next();
+                }
             }
 
-            if (mCurrentSlide != null) {
+            if (slide != null) {
+
+                mPreviousFlipTick = currentTick;
+
+                mCurrentSlide = slide;
+                Log.d(Utils.TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
+
                 // Activate new slide
                 mAllowAutoZoom = true;
                 mFixedLighting = true;
@@ -170,15 +175,25 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
             }
         }
+
         if (glText == null) {
             throw new RuntimeException("GLText had not created yet");
         }
+
     }
 
     public void resetView() {
         mDX = mDY = 0;
         mDistance = DEPTH_MIN;
         mAbsoluteZoom = ZOOM_MAX;
+    }
+
+    public void resetApp() {
+        mPreviousFlipTick = 0;
+        synchronized (listLock) {
+            mSlideIterator = mStarGreeterData.getAllSlides().iterator();
+        }
+        resetView();
     }
 
     @Override
