@@ -2,8 +2,10 @@ package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 
 public class SpriteBatch {
+    private static final String TAG = "StarGreeterSpriteBatch";
 
     //--Constants--//
     final static int VERTEX_SIZE = 5;                  // Vertex Size (in Components) ie. (X,Y,U,V,M), M is MVP matrix index
@@ -19,14 +21,17 @@ public class SpriteBatch {
     private float[] mVPMatrix;                            // View and projection matrix specified at begin
     private float[] uMVPMatrices = new float[GLText.CHAR_BATCH_SIZE * 16]; // MVP matrix array to pass to shader
     private int mMVPMatricesHandle;                            // shader handle of the MVP matrix array
-    //private int mLightPosHandle;
     private float[] mMVPMatrix = new float[16];                // used to calculate MVP matrix of each sprite
+    private int mLightPosHandle;
+    private int mNormalHandle;
 
+    final float[] mNormal = new float[]{0.0f, 0.0f, 1.0f};
 
-    //final float[] mLightPosInModelSpace = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
-    //final float[] mLightPosInWorldSpace = new float[4];
-    //final float[] mLightPosInEyeSpace = new float[4];
-    //final float[] mLightModelMatrix = new float[16];
+    final float[] mLightPosInModelSpace = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
+    final float[] mLightPosInWorldSpace = new float[4];
+    final float[] mLightPosInEyeSpace = new float[4];
+
+    final float[] mLightModelMatrix = new float[16];
 
     //--Constructor--//
     // D: prepare the sprite batcher for specified maximum number of sprites
@@ -52,7 +57,8 @@ public class SpriteBatch {
         }
         vertices.setIndices(indices, 0, len);         // Set Index Buffer for Rendering
         mMVPMatricesHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix");
-        //mLightPosHandle = GLES20.glGetUniformLocation(program.getHandle(), "u_LightPos");
+        mLightPosHandle = GLES20.glGetUniformLocation(programHandle, "u_LightPos");
+        mNormalHandle = GLES20.glGetUniformLocation(programHandle, "u_Normal");
     }
 
     public void beginBatch(float[] vpMatrix) {
@@ -69,10 +75,31 @@ public class SpriteBatch {
         if (numSprites > 0) {                        // IF Any Sprites to Render
             // bind MVP matrices array to shader
             GLES20.glUniformMatrix4fv(mMVPMatricesHandle, numSprites, false, uMVPMatrices, 0);
+            Utils.checkGlError();
             GLES20.glEnableVertexAttribArray(mMVPMatricesHandle);
+            Utils.checkGlError();
 
-            //GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
-            //GLES20.glEnableVertexAttribArray(mLightPosHandle);
+            // adjust light
+            float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 100.0f;
+            float xoffset = 0.5f + 3f * (float) Math.sin(tmp);
+            float yoffset = 0;// 0.7f * (float) Math.sin(1 + tmp);
+
+            Matrix.setIdentityM(mLightModelMatrix, 0);
+            Matrix.translateM(mLightModelMatrix, 0, xoffset, yoffset, 1.0f);
+
+            Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
+            // XXX hackish hack, do not translate with VP matrix, leave orthogonal model coordinates
+            //Matrix.multiplyMV(mLightPosInEyeSpace, 0, mVPMatrix, 0, mLightPosInWorldSpace, 0);
+            System.arraycopy(mLightPosInWorldSpace, 0, mLightPosInEyeSpace, 0, mLightPosInEyeSpace.length);
+            mLightPosInEyeSpace[3] = 1.0f;
+
+            // Pass in the light position in eye space.
+            GLES20.glUniform3fv(mLightPosHandle, 1, mLightPosInEyeSpace, 0);
+            Utils.checkGlError();
+
+            GLES20.glUniform3fv(mNormalHandle, 1, mNormal, 0);
+            Utils.checkGlError();
+
 
             vertices.setVertices(vertexBuffer, 0, bufferIndex);  // Set Vertices from Buffer
             vertices.bind();                             // Bind Vertices
@@ -136,14 +163,6 @@ public class SpriteBatch {
 
         //TODO: make sure numSprites < 24
         System.arraycopy(mMVPMatrix, 0, uMVPMatrices, numSprites * 16, 16);
-
-
-      /*  Matrix.setIdentityM(mLightModelMatrix, 0);
-        Matrix.translateM(mLightModelMatrix, 0, 0, 0, 1.0f);
-
-        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
-        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mVPMatrix, 0, mLightPosInWorldSpace, 0);
-        */
 
         numSprites++;                                   // Increment Sprite Count
     }

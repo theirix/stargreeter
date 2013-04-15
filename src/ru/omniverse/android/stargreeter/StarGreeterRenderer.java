@@ -245,12 +245,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private void drawText() {
 
         if (mCurrentSlide != null) {
-            glText.begin(1, 1, 1, 0.5f, mMVPMatrix);
+            float intens = 0.6f;
+            glText.begin(0.8f, 0.3f, 0.7f, 1.0f, mMVPMatrix);
 
             final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
             for (int i = 0; i < strings.length; i++) {
                 String string = strings[i].trim();
-                glText.draw(string, 0, 10 - i * glText.getCharHeight(), 0);
+                glText.draw(string, -40, 10 - i * glText.getCharHeight(), 0);
             }
 
             glText.draw(String.format("%.1f", mDistance), 30, 30, 0);

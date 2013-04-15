@@ -146,7 +146,7 @@ class TriangleColored {
         Utils.checkGlError();
 
         // Pass in the light position in eye space.
-        GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+        GLES20.glUniform3fv(mLightPosHandle, 1, mLightPosInEyeSpace, 0);
         Utils.checkGlError();
 
         // Draw the triangle

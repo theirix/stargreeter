@@ -35,7 +35,10 @@ public class Utils {
         }
 
         if (shaderHandle == 0) {
-            throw new RuntimeException("Error creating shader.");
+            String shaderTypeStr =
+                    shaderType == GLES20.GL_VERTEX_SHADER ? "vertex " :
+                            shaderType == GLES20.GL_FRAGMENT_SHADER ? "fragment " : "";
+            throw new RuntimeException("Error creating " + shaderTypeStr + "shader.");
         }
 
         return shaderHandle;
@@ -104,11 +107,11 @@ public class Utils {
     }
 
     public static FloatBuffer newFloatBuffer(float[] verticesData) {
-		FloatBuffer buffer = ByteBuffer.allocateDirect(verticesData.length * 4)
-				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer buffer = ByteBuffer.allocateDirect(verticesData.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
         buffer.put(verticesData).position(0);
-		return buffer;
-	}
+        return buffer;
+    }
 
     public static ShortBuffer newShortBuffer(short[] verticesData) {
         ShortBuffer buffer = ByteBuffer.allocateDirect(verticesData.length * 2)
