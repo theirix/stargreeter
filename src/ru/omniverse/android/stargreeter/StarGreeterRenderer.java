@@ -43,13 +43,11 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
-    //    private final float[] mTranslationMatrix = new float[16];
+    private final float[] mTranslationMatrix = new float[16];
     private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
-    //private volatile float mAngle;
-    @SuppressWarnings("UnusedDeclaration")
     private volatile float mDX, mDY;
     private volatile float mAbsoluteZoom;
     private volatile float mDistance;
@@ -57,31 +55,29 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private GLText glText;
 
 
-    public static final int PROJECTION_SIZE = 150;
-    public static final int FAR_PLANE = 30;
-    public static final int NEAR_PLANE = 1;
+    public static final float PROJECTION_SIZE = 150;
+    public static final float FAR_PLANE = 30;
+    public static final float NEAR_PLANE = 0.7f;
 
 
     // zoom limits, should correlate with projection box
-    private static final float DEPTH_MAX = FAR_PLANE;
-    private static final float DEPTH_MIN = NEAR_PLANE;
+    private static final float DEPTH_MAX = 6.0f;
+    private static final float DEPTH_MIN = 1.1f;
     // does not affect anything
     private static final float ZOOM_MIN = 0.05f;
     private static final float ZOOM_MAX = 5.0f;
 
     private boolean mTouched = false;
+    private boolean mAllowAutoZoom;
 
     private final StarGreeterData mStarGreeterData;
-    //    private volatile boolean mRequestFlipSlide;
     private Slide mCurrentSlide;
     private Iterator<Slide> mSlideIterator;
-//    private final CountDownTimer mCountDownTimer;
 
     private long mPreviousFlipTick = 0;
 
 
     public StarGreeterRenderer(Context context) {
-        //mAngle = 0;
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
@@ -99,30 +95,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         }
 
         // Set to the first slide
-//        mRequestFlipSlide = false;
         mSlideIterator = mStarGreeterData.getAllSlides().iterator();
-
-//        mCountDownTimer = new CountDownTimer(
-//                (mStarGreeterData.getAllSlides().size() - 1) * mStarGreeterData.getSlideTime() * 1000,
-//                mStarGreeterData.getSlideTime() * 1000) {
-//
-//            @Override
-//            public void onTick(long millisUntilFinished) {
-//                Log.d(Utils.TAG, "Request slide flipping");
-//                mRequestFlipSlide = true;
-//            }
-//
-//            @Override
-//            public void onFinish() {
-//                Log.d(Utils.TAG, "Finished");
-//            }
-//        };
     }
-
-//    private double gauss(double x, double mu, double sigma) {
-//        return (1.0 / (sigma * Math.sqrt(2 * Math.PI)))
-//                * Math.exp(-(x - mu) * (x - mu) / (2 * mu * mu));
-//    }
 
     public void setCurrentZoom(float currentZoom) {
         mTouched = true;
@@ -147,10 +121,52 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mDY += dy;
     }
 
+    // ZOOM_MAX -> DEPTH_MAX ; ZOOM_MIN -> DEPTH_MIN ;
     private static float calculateDistance(float absoluteZoom) {
         return (DEPTH_MAX + DEPTH_MIN) / 2
                 + (absoluteZoom - (ZOOM_MAX + ZOOM_MIN) / 2)
                 * (DEPTH_MIN - DEPTH_MAX) / (ZOOM_MAX - ZOOM_MIN);
+    }
+
+    private static float calculateAutoZoomDistance(float trigfun) {
+//        return 1.0f + 3.0f * (1 + trigfun);
+        return DEPTH_MIN + (DEPTH_MAX - DEPTH_MIN) / 2.0f * (1 + trigfun);
+    }
+
+
+    private void flipSlideIfNeeded() {
+        // Flip to the next side
+        long currentTick = SystemClock.elapsedRealtime();
+        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000 &&
+                mSlideIterator.hasNext()) {
+            mPreviousFlipTick = currentTick;
+
+            if (mSlideIterator.hasNext()) {
+                mCurrentSlide = mSlideIterator.next();
+                Log.d(Utils.TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
+            } else if (!mStarGreeterData.isKeepLastSlide()) {
+                mCurrentSlide = null;
+            }
+
+            if (mCurrentSlide != null) {
+                // Activate new slide
+                mAllowAutoZoom = true;
+
+                glText = new GLText(mResourceLoader);
+                // Load the font from file (set size + padding), creates the texture
+                // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
+                glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
+            }
+        }
+        if (glText == null) {
+            throw new RuntimeException("GLText had not created yet");
+        }
+    }
+
+    public void resetView() {
+        mDX = mDY = 0;
+        mDistance = DEPTH_MIN;
+        mAbsoluteZoom = ZOOM_MAX;
     }
 
     @Override
@@ -171,32 +187,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 //        mCountDownTimer.start();
     }
 
-
-    private void flipSlideIfNeeded() {
-        // Flip to the next side
-        long currentTick = SystemClock.elapsedRealtime();
-        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000) {
-            mPreviousFlipTick = currentTick;
-
-            if (mSlideIterator.hasNext()) {
-                mCurrentSlide = mSlideIterator.next();
-                Log.d(Utils.TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
-            } else if (!mStarGreeterData.isKeepLastSlide()) {
-                mCurrentSlide = null;
-            }
-
-            if (mCurrentSlide != null) {
-                glText = new GLText(mResourceLoader);
-                // Load the font from file (set size + padding), creates the texture
-                // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
-                glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
-            }
-        }
-        if (glText == null) {
-            throw new RuntimeException("GLText had not created yet");
-        }
-    }
-
     @Override
     public void onDrawFrame(GL10 unused) {
         flipSlideIfNeeded();
@@ -208,8 +198,12 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         float counter = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
 
-        if (!mTouched) {
-            mDistance = 1.0f + 3.0f * (1 + (float) Math.sin(counter));
+        if (mAllowAutoZoom) {
+            mDistance = calculateAutoZoomDistance((float) Math.sin(counter));
+
+            if (Math.abs(mDistance - DEPTH_MIN) < 1E-2) {
+                mAllowAutoZoom = false;
+            }
         }
 
         // adjust light
@@ -223,6 +217,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+
+        if (!mAllowAutoZoom) {
+            // Allow touch movement only if autozoom finished
+            Matrix.setIdentityM(mTranslationMatrix, 0);
+            Matrix.translateM(mTranslationMatrix, 0, mDX, mDY, 0.0f);
+            Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
+        }
 
 //        drawTriangle();
 
@@ -261,17 +262,17 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             glText.begin(Color.red(mCurrentSlide.getFontColor()),
                     Color.green(mCurrentSlide.getFontColor()),
                     Color.blue(mCurrentSlide.getFontColor()),
-                    1.0f, mMVPMatrix);
+                    1.0f,
+                    mMVPMatrix);
 
             final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
             for (int i = 0; i < strings.length; i++) {
                 String string = strings[i].trim();
-                glText.draw(string, -40, 10 - i * glText.getCharHeight(), 0);
+                glText.drawC(string, 0, 10 - i * glText.getCharHeight(), 0);
             }
 
+            // TODO debug
             glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
-//            glText.draw(String.format(mDisplay), 50, 20 + glText.getCharHeight(), 0);
-//            glText.draw("star trek", -120, -10, 0);
             glText.end();
         }
 
@@ -297,9 +298,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             top /= ratio;
             bottom /= ratio;
         }
-        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, (float) NEAR_PLANE, (float) FAR_PLANE);
+        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, NEAR_PLANE, FAR_PLANE);
     }
-
 }
 
 

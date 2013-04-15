@@ -2,6 +2,8 @@ package ru.omniverse.android.stargreeter;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
@@ -17,6 +19,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     private final StarGreeterRenderer mRenderer;
 
     private final ScaleGestureDetector mScaleDetector;
+    private final GestureDetector mGestureDetector;
 
     public StarGreeterGLSurfaceView(Context context) {
         super(context);
@@ -31,30 +34,26 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         // Render the view only when there is a change in the drawing data
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-        mScaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
-            @Override
-            public void onScaleEnd(ScaleGestureDetector detector) {
-            }
-
-            @Override
-            public boolean onScaleBegin(ScaleGestureDetector detector) {
-                return true;
-            }
-
+        mScaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 mRenderer.setCurrentZoom(detector.getScaleFactor());
                 requestRender();
-
                 return false;
             }
         });
 
+        mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                Log.d(Utils.TAG, "Double tap reseta a view");
+                mRenderer.resetView();
+                return true;
+            }
+        });
     }
 
-
-    //private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
-    private final float TOUCH_MOVE_FACTOR = 0.01f;
+    private static final float TOUCH_MOVE_FACTOR = 0.1f;
     private float mPreviousX;
     private float mPreviousY;
 
@@ -65,6 +64,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         // interested in events where the touch position changed.
 
         mScaleDetector.onTouchEvent(e);
+        mGestureDetector.onTouchEvent(e);
 
         float x = e.getX();
         float y = e.getY();
@@ -75,19 +75,6 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
 
                     float dx = x - mPreviousX;
                     float dy = y - mPreviousY;
-                    /*
-                    // reverse direction of rotation above the mid-line
-                    if (y > getHeight() / 2) {
-                        dx = dx * -1;
-                    }
-
-                    // reverse direction of rotation to left of the mid-line
-                    if (x < getWidth() / 2) {
-                        dy = dy * -1;
-                    }
-
-                    mRenderer.mAngle += (dx + dy) * TOUCH_SCALE_FACTOR;  // = 180.0f / 320
-                    */
                     mRenderer.setCurrentTranslate(dx * TOUCH_MOVE_FACTOR, -dy * TOUCH_MOVE_FACTOR);
                     requestRender();
                 }
