@@ -2,10 +2,8 @@ package ru.omniverse.android.stargreeter;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.os.SystemClock;
 
 public class SpriteBatch {
-    private static final String TAG = "StarGreeterSpriteBatch";
 
     //--Constants--//
     final static int VERTEX_SIZE = 5;                  // Vertex Size (in Components) ie. (X,Y,U,V,M), M is MVP matrix index
@@ -44,6 +42,8 @@ public class SpriteBatch {
         this.maxSprites = maxSprites;                   // Save Maximum Sprites
         this.numSprites = 0;                            // Clear Sprite Counter
 
+        setLightPosition(0, 0, 0);
+
         short[] indices = new short[maxSprites * INDICES_PER_SPRITE];  // Create Temp Index Buffer
         int len = indices.length;                       // Get Index Buffer Length
         short j = 0;                                    // Counter
@@ -59,6 +59,11 @@ public class SpriteBatch {
         mMVPMatricesHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix");
         mLightPosHandle = GLES20.glGetUniformLocation(programHandle, "u_LightPos");
         mNormalHandle = GLES20.glGetUniformLocation(programHandle, "u_Normal");
+    }
+
+    public void setLightPosition(float x, float y, float z) {
+        Matrix.setIdentityM(mLightModelMatrix, 0);
+        Matrix.translateM(mLightModelMatrix, 0, x, y, z);
     }
 
     public void beginBatch(float[] vpMatrix) {
@@ -79,18 +84,10 @@ public class SpriteBatch {
             GLES20.glEnableVertexAttribArray(mMVPMatricesHandle);
             Utils.checkGlError();
 
-            // adjust light
-            float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 100.0f;
-            float xoffset = 0.5f + 3f * (float) Math.sin(tmp);
-            float yoffset = 0;// 0.7f * (float) Math.sin(1 + tmp);
-
-            Matrix.setIdentityM(mLightModelMatrix, 0);
-            Matrix.translateM(mLightModelMatrix, 0, xoffset, yoffset, 1.0f);
-
             Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
             // XXX hackish hack, do not translate with VP matrix, leave orthogonal model coordinates
             //Matrix.multiplyMV(mLightPosInEyeSpace, 0, mVPMatrix, 0, mLightPosInWorldSpace, 0);
-            System.arraycopy(mLightPosInWorldSpace, 0, mLightPosInEyeSpace, 0, mLightPosInEyeSpace.length);
+            Utils.copyVector(mLightPosInWorldSpace, mLightPosInEyeSpace);
             mLightPosInEyeSpace[3] = 1.0f;
 
             // Pass in the light position in eye space.

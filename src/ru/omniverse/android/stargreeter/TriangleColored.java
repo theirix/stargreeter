@@ -15,8 +15,6 @@ import java.nio.FloatBuffer;
 @SuppressWarnings("FieldCanBeLocal")
 class TriangleColored {
 
-    private static final String TAG = "StarGreeterTriangleColored";
-
     private final FloatBuffer vertexBuffer;
     private final FloatBuffer colorBuffer;
     private final FloatBuffer normalBuffer;

@@ -7,7 +7,7 @@
 
     <beginning>
         <text>hello world!</text>
-        <font size="46">Federation</font>
+        <font size="46" color="#ff0000">Federation</font>
     </beginning>
 
     <slides>
@@ -15,18 +15,18 @@
             <text>Second slide
                 And the next lime
             </text>
-            <font size="46">tkclscrd</font>
+            <font size="46" color="#ff0000">tkclscrd</font>
         </slide>
         <slide>
             <text>Third slide
                 Long time ago
                 In far far galaxy...
             </text>
-            <font size="46">tkclscrd</font>
+            <font size="46" color="#ff0000">tkclscrd</font>
         </slide>
         <slide>
             <text>Fourth slide</text>
-            <font size="46">tkclscrd</font>
+            <font size="46" color="#ff0000">tkclscrd</font>
         </slide>
     </slides>
 

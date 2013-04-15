@@ -17,6 +17,7 @@
 package ru.omniverse.android.stargreeter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -27,9 +28,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.util.Iterator;
 
+@SuppressWarnings("UnusedDeclaration")
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
-    private static final String TAG = "StarGreeterRenderer";
     private final ResourceLoader mResourceLoader;
 
     //private Triangle mTriangle;
@@ -90,7 +91,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         // Load config
         mStarGreeterData = new StarGreeterData(mResourceLoader.loadXml(R.raw.stargreeter));
-        Log.d(TAG, "starGreeterData = " + mStarGreeterData);
+        Log.d(Utils.TAG, "starGreeterData = " + mStarGreeterData);
 
         // Preload fonts
         for (Slide slide : mStarGreeterData.getAllSlides()) {
@@ -107,13 +108,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 //
 //            @Override
 //            public void onTick(long millisUntilFinished) {
-//                Log.d(TAG, "Request slide flipping");
+//                Log.d(Utils.TAG, "Request slide flipping");
 //                mRequestFlipSlide = true;
 //            }
 //
 //            @Override
 //            public void onFinish() {
-//                Log.d(TAG, "Finished");
+//                Log.d(Utils.TAG, "Finished");
 //            }
 //        };
     }
@@ -171,9 +172,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     }
 
 
-    @Override
-    public void onDrawFrame(GL10 unused) {
-
+    private void flipSlideIfNeeded() {
         // Flip to the next side
         long currentTick = SystemClock.elapsedRealtime();
         if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000) {
@@ -181,7 +180,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
             if (mSlideIterator.hasNext()) {
                 mCurrentSlide = mSlideIterator.next();
-                Log.d(TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
+                Log.d(Utils.TAG, "Flipped to " + mCurrentSlide.getText().split("\n")[0]);
             } else if (!mStarGreeterData.isKeepLastSlide()) {
                 mCurrentSlide = null;
             }
@@ -196,17 +195,28 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         if (glText == null) {
             throw new RuntimeException("GLText had not created yet");
         }
+    }
+
+    @Override
+    public void onDrawFrame(GL10 unused) {
+        flipSlideIfNeeded();
 
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        float[] mPrev = new float[16];
 
         mBackground.draw();
 
+        float counter = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
+
         if (!mTouched) {
-            float tmp = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
-            mDistance = 1.0f + 3.0f * (1 + (float) Math.sin(tmp));
+            mDistance = 1.0f + 3.0f * (1 + (float) Math.sin(counter));
         }
+
+        // adjust light
+        float xLight = 0.5f + 3f * (float) Math.sin(counter * 5);
+        float yLight = 0;// 0.7f * (float) Math.sin(1 + counter / 100.0f);
+        glText.setLightPosition(xLight, yLight, 1.0f);
+
 
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mVMatrix, 0, 0, 0, mDistance, 0f, 0f, 1.0f, 0f, 1.0f, 0.0f);
@@ -214,7 +224,15 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
 
-        System.arraycopy(mMVPMatrix, 0, mPrev, 0, mPrev.length);
+//        drawTriangle();
+
+        drawText();
+    }
+
+    private void drawTriangle() {
+        // save mvp matrix
+        float[] mPrev = new float[16];
+        Utils.copyVector(mMVPMatrix, mPrev);
 
         float textScale = 100;
         Matrix.setIdentityM(mScaleMatrix, 0);
@@ -227,26 +245,23 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         // Draw triangle
         mTriangleColored.draw(mMVPMatrix, mVMatrix, mProjMatrix);
 
-
-        System.arraycopy(mPrev, 0, mMVPMatrix, 0, mPrev.length);
-
-        /*float textScale = 0.03f;
-        Matrix.setIdentityM(mScaleMatrix, 0);
-        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
-        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);*/
-        drawText();
-    }
-
-    private float[] dupMatrix(float[] input) {
-        System.arraycopy(input, 0, mTmp, 0, input.length);
-        return mTmp;
+        Utils.copyVector(mPrev, mMVPMatrix);
     }
 
     private void drawText() {
+          /*
+        float textScale = 0.03f;
+        Matrix.setIdentityM(mScaleMatrix, 0);
+        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);*/
+
 
         if (mCurrentSlide != null) {
-            float intens = 0.6f;
-            glText.begin(0.8f, 0.3f, 0.7f, 1.0f, mMVPMatrix);
+//            float intens = 0.6f;
+            glText.begin(Color.red(mCurrentSlide.getFontColor()),
+                    Color.green(mCurrentSlide.getFontColor()),
+                    Color.blue(mCurrentSlide.getFontColor()),
+                    1.0f, mMVPMatrix);
 
             final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
             for (int i = 0; i < strings.length; i++) {
@@ -260,6 +275,11 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             glText.end();
         }
 
+    }
+
+    private float[] dupMatrix(float[] input) {
+        Utils.copyVector(input, mTmp);
+        return mTmp;
     }
 
     @Override

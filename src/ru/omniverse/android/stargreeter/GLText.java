@@ -458,6 +458,10 @@ class GLText {
         return (fontHeight * scaleY);                 // Return Font Height (Actual)
     }
 
+    public void setLightPosition(float x, float y, float z) {
+        batch.setLightPosition(x, y, z);
+    }
+
     //--Draw Font Texture--//
     // D: draw the entire font texture (NOTE: for testing purposes only)
     // A: width, height - the width and height of the area to draw to. this is used

@@ -19,8 +19,6 @@ import java.util.Map;
 
 class ResourceLoader {
 
-    //private static final String TAG = "StarGreeterResourceLoader";
-
     private final Resources mContextResources;
     private final AssetManager mAssetManager;
 

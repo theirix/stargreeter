@@ -10,7 +10,7 @@ import java.nio.ShortBuffer;
 
 public class Utils {
 
-    public static final String TAG = "StarGreeterUtils";
+    public static final String TAG = "StarGreeter";
 
     public static int compileShader(final int shaderType, final String shaderSource) {
         int shaderHandle = GLES20.glCreateShader(shaderType);
@@ -118,5 +118,11 @@ public class Utils {
                 .order(ByteOrder.nativeOrder()).asShortBuffer();
         buffer.put(verticesData).position(0);
         return buffer;
+    }
+
+    public static void copyVector(float[] src, float[] dest) {
+        if (src.length != dest.length)
+            throw new IllegalArgumentException("Vector size mismatch");
+        System.arraycopy(src, 0, dest, 0, src.length);
     }
 }

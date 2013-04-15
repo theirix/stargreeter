@@ -1,5 +1,6 @@
 package ru.omniverse.android.stargreeter;
 
+import android.graphics.Color;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -49,7 +50,9 @@ public class StarGreeterData {
         String text = (String) xPath.evaluate("text", slide, XPathConstants.STRING);
         String fontName = (String) xPath.evaluate("font", slide, XPathConstants.STRING);
         int fontSize = Integer.parseInt((String) xPath.evaluate("font/@size", slide, XPathConstants.STRING));
-        return new Slide(text, fontName, fontSize);
+        int fontColor = Color.parseColor((String) xPath.evaluate("font/@color", slide, XPathConstants.STRING));
+
+        return new Slide(text, fontName, fontSize, fontColor);
     }
 
     public Slide getBeginning() {

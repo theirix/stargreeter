@@ -14,8 +14,6 @@ import android.view.ScaleGestureDetector;
 @SuppressWarnings("FieldCanBeLocal")
 class StarGreeterGLSurfaceView extends GLSurfaceView {
 
-//    public final String TAG = "StarGreeterGLSurfaceView";
-
     private final StarGreeterRenderer mRenderer;
 
     private final ScaleGestureDetector mScaleDetector;
