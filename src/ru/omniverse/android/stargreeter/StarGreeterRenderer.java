@@ -290,9 +290,16 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                     mMVPMatrix);
 
             final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
+
+            // calcualate positions
+            final float hf = glText.getCharHeight();
+            final float h0 = hf * 0.2f;
+            final float h = strings.length * (hf + h0) - h0;
+
             for (int i = 0; i < strings.length; i++) {
-                String string = strings[i];
-                glText.drawC(string, 0, 10 - i * glText.getCharHeight(), 0);
+                float y = -h / 2 + hf / 2 + i * (hf + h0);
+//                Log.d(Utils.TAG, "i=" + i + " y=" + y);
+                glText.drawC(strings[i], 0, y, 0);
             }
 
 //            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
