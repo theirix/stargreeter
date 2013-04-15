@@ -28,14 +28,10 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.util.Iterator;
 
-@SuppressWarnings("UnusedDeclaration")
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
-    public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
     private final ResourceLoader mResourceLoader;
 
-    //private Triangle mTriangle;
-    //private Square mSquare;
     private TriangleColored mTriangleColored;
 
     private Background mBackground;
@@ -55,27 +51,40 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     private GLText glText;
 
-
     public static final float PROJECTION_SIZE = 150;
     public static final float FAR_PLANE = 30;
     public static final float NEAR_PLANE = 0.7f;
 
-
     // zoom limits, should correlate with projection box
-    private static final float DEPTH_MAX = 6.0f;
+    private static final float DEPTH_MAX = 10.0f;
     private static final float DEPTH_MIN = 1.1f;
     // does not affect anything
     private static final float ZOOM_MIN = 0.05f;
     private static final float ZOOM_MAX = 5.0f;
 
+    @SuppressWarnings("UnusedDeclaration")
     private boolean mTouched = false;
-    private boolean mAllowAutoZoom;
 
     private final StarGreeterData mStarGreeterData;
     private Slide mCurrentSlide;
     private Iterator<Slide> mSlideIterator;
 
     private long mPreviousFlipTick = 0;
+
+    // Lighting movement stuff
+    private boolean mFixedLighting;
+    private float mLightingCounterPhase;
+
+    // Camera movement stuff
+    private boolean mAllowAutoZoom;
+
+    private float cameraCounterMin, cameraCounterMax;
+
+    public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
+    private int flybyTime;
+    //    private final float xCameraOffset = DEPTH_MIN + (DEPTH_MAX - DEPTH_MIN) / 2.0f;
+//    private final float cameraAmplitude = (DEPTH_MAX - DEPTH_MIN) / 2.0f;
+//    private final float cameraSlowFactor = 1f;
 
 
     public StarGreeterRenderer(Context context) {
@@ -95,6 +104,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             mResourceLoader.loadCachedFont(slide.getFontName());
         }
 
+        flybyTime = mStarGreeterData.getSlideTime() * 1000 / 3;
+
         // Set to the first slide
         mSlideIterator = mStarGreeterData.getAllSlides().iterator();
     }
@@ -102,17 +113,12 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     public void setCurrentZoom(float currentZoom) {
         mTouched = true;
 
-        //currentZoom = 1.0f + (currentZoom - 1.0f) * (float)gauss(currentZoom, 1.0, 0.5);
-        //currentZoom = Math.max(0.1f, Math.min(currentZoom, 10.0f));
         float zoomToBe = Math.max(ZOOM_MIN, Math.min(mAbsoluteZoom * currentZoom, ZOOM_MAX));
         float delta = zoomToBe - mAbsoluteZoom;
         if (Math.abs(delta) < 1E-3)
             return;
         mAbsoluteZoom += delta * ZOOM_SMOOTH_FACTOR;
-        //mAbsoluteZoom *= currentZoom;
         mDistance = calculateDistance(mAbsoluteZoom);
-
-        //mDisplay = String.format("cur=%.1f abs=%.1f", currentZoom, mAbsoluteZoom);
     }
 
     public void setCurrentTranslate(float dx, float dy) {
@@ -127,11 +133,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         return (DEPTH_MAX + DEPTH_MIN) / 2
                 + (absoluteZoom - (ZOOM_MAX + ZOOM_MIN) / 2)
                 * (DEPTH_MIN - DEPTH_MAX) / (ZOOM_MAX - ZOOM_MIN);
-    }
-
-    private static float calculateAutoZoomDistance(float trigfun) {
-//        return 1.0f + 3.0f * (1 + trigfun);
-        return DEPTH_MIN + (DEPTH_MAX - DEPTH_MIN) / 2.0f * (1 + trigfun);
     }
 
 
@@ -152,6 +153,16 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             if (mCurrentSlide != null) {
                 // Activate new slide
                 mAllowAutoZoom = true;
+                mFixedLighting = true;
+                mDistance = DEPTH_MAX;
+                mAbsoluteZoom = ZOOM_MIN;
+
+                mLightingCounterPhase = 0.0f;
+
+                cameraCounterMin = SystemClock.elapsedRealtime();
+                cameraCounterMax = cameraCounterMin + flybyTime;
+
+                mTouched = false;
 
                 glText = new GLText(mResourceLoader);
                 // Load the font from file (set size + padding), creates the texture
@@ -184,8 +195,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         mBackground = new Background(mResourceLoader);
         mTriangleColored = new TriangleColored(mResourceLoader);
-
-//        mCountDownTimer.start();
     }
 
     @Override
@@ -197,19 +206,49 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         mBackground.draw();
 
-        float counter = (SystemClock.uptimeMillis() % (int) (2 * Math.PI * 1000)) / 1000.0f;
+        // adjust camera distance
+
+        float cameraCounter = SystemClock.elapsedRealtime();
 
         if (mAllowAutoZoom) {
-            mDistance = calculateAutoZoomDistance((float) Math.sin(counter));
+            float cameraAlpha = (DEPTH_MAX - DEPTH_MIN) / (cameraCounterMin - cameraCounterMax);
+            float cameraBeta = DEPTH_MAX - cameraAlpha * cameraCounterMin;
+            mDistance = cameraBeta + cameraAlpha * cameraCounter;
 
-            if (Math.abs(mDistance - DEPTH_MIN) < 1E-2) {
+            if (mDistance < DEPTH_MIN * 1.3) {
+                // stop camera movement
                 mAllowAutoZoom = false;
+                mDistance = DEPTH_MIN;
+                mAbsoluteZoom = ZOOM_MAX;
             }
         }
 
-        // adjust light
-        float xLight = 0.5f + 3f * (float) Math.sin(counter * 5);
-        float yLight = 0;// 0.7f * (float) Math.sin(1 + counter / 100.0f);
+        float lightingCounter = (SystemClock.elapsedRealtime() % (int) (2 * Math.PI * 1000)) / 1000.0f;
+
+        // adjust lights
+        final float xLightOffset = 0.5f;
+        final float lightAmplitude = 3f;
+        final float lightSlowFactor = 2f;
+
+        // fixed lighting if far enough
+        boolean shouldFixedLighting = Math.abs(mDistance - DEPTH_MIN) > (DEPTH_MAX - DEPTH_MIN) / 3.0;
+        if (mFixedLighting != shouldFixedLighting) {
+            if (!shouldFixedLighting) {
+                // save a phase if enabling fixed lighting
+                mLightingCounterPhase = (float) Math.asin((0.0f - xLightOffset) / lightAmplitude)
+                        - lightSlowFactor * lightingCounter;
+            }
+            mFixedLighting = shouldFixedLighting;
+        }
+
+        // leave light at center
+        float xLight = 0, yLight = 0;
+        if (!mFixedLighting) {
+            xLight = xLightOffset + lightAmplitude * (float) Math.sin(lightingCounter * lightSlowFactor
+                    + mLightingCounterPhase);
+            yLight = 0;// 0.7f * (float) Math.sin(1 + counter / 100.0f);
+
+        }
         glText.setLightPosition(xLight, yLight, 1.0f);
 
 
@@ -231,6 +270,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         drawText();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     private void drawTriangle() {
         // save mvp matrix
         float[] mPrev = new float[16];
