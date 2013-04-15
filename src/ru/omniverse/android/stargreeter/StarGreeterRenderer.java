@@ -268,7 +268,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
             final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
             for (int i = 0; i < strings.length; i++) {
-                String string = strings[i].trim();
+                String string = strings[i];
                 glText.drawC(string, 0, 10 - i * glText.getCharHeight(), 0);
             }
 
