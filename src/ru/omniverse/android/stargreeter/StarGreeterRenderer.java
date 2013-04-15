@@ -38,7 +38,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
     private final float[] mTranslationMatrix = new float[16];
-    //private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
@@ -80,16 +79,11 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
     private int flybyTime;
-    //    private final float xCameraOffset = DEPTH_MIN + (DEPTH_MAX - DEPTH_MIN) / 2.0f;
-//    private final float cameraAmplitude = (DEPTH_MAX - DEPTH_MIN) / 2.0f;
-//    private final float cameraSlowFactor = 1f;
-
 
     public StarGreeterRenderer(Context context) {
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
-        //mDisplay = String.format("cur=- abs=%.1f", mAbsoluteZoom);
 
         mResourceLoader = new ResourceLoader(context);
 
@@ -179,7 +173,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private void createGLText() {
         glText = new GLText(mResourceLoader);
         // Load the font from file (set size + padding), creates the texture
-        // Create Font (Height: 14 Pixels / X+Y Padding 2 Pixels)
         glText.load(mCurrentSlide.getFontName(), mCurrentSlide.getFontSize(), 2, 2);
     }
 
@@ -200,21 +193,18 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
+        Log.d(Utils.TAG, "Context recreated");
+
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-        //GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-        //GLES20.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
-        //GLES20.glEnable(GL10.GL_ALPHA_BITS);
 
         mBackground = new Background(mResourceLoader);
-//        mTriangleColored = new TriangleColored(mResourceLoader);
 
-        Log.d(Utils.TAG, "Context recreated");
         if (glText != null) {
-            Log.d(Utils.TAG, "Create gltext");
+            Log.d(Utils.TAG, "Recreate gltext");
             createGLText();
         }
     }
@@ -287,41 +277,12 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
         }
 
-//        drawTriangle();
-
         drawText();
     }
 
-    /*@SuppressWarnings("UnusedDeclaration")
-    private void drawTriangle() {
-        // save mvp matrix
-        float[] mPrev = new float[16];
-        Utils.copyVector(mMVPMatrix, mPrev);
-
-        float textScale = 100;
-        Matrix.setIdentityM(mScaleMatrix, 0);
-        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
-        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
-
-        //Matrix.setRotateM(mTranslationMatrix, 0, mDX, 0, -1.0f, 0);
-        //Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
-
-        // Draw triangle
-        mTriangleColored.draw(mMVPMatrix, mVMatrix, mProjMatrix);
-
-        Utils.copyVector(mPrev, mMVPMatrix);
-    }*/
-
     private void drawText() {
-          /*
-        float textScale = 0.03f;
-        Matrix.setIdentityM(mScaleMatrix, 0);
-        Matrix.scaleM(mScaleMatrix, 0, textScale, textScale, 0.0f);
-        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);*/
-
 
         if (mCurrentSlide != null) {
-//            float intens = 0.6f;
             glText.begin(Color.red(mCurrentSlide.getFontColor()),
                     Color.green(mCurrentSlide.getFontColor()),
                     Color.blue(mCurrentSlide.getFontColor()),
@@ -334,8 +295,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 glText.drawC(string, 0, 10 - i * glText.getCharHeight(), 0);
             }
 
-            // TODO debug
-            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
+//            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
             glText.end();
         }
 
