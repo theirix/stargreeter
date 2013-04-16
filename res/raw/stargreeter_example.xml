@@ -1,32 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <stargreeter>
     <settings>
-        <slide-time>15</slide-time>
-        <keep-last-slide>true</keep-last-slide>
+        <slide-time>5</slide-time>
+        <keep-last-slide>false</keep-last-slide>
+        <audio-name>theme.mp3</audio-name>
+        <!-- sound must be located in assets/ directory -->
     </settings>
 
     <beginning>
-        <text>hello world!</text>
-        <font size="46" color="red">Federation</font>
+        <text>hello world
+            hello again
+        </text>
+        <font size="46" color="#ff0000">FreeSansBold</font>
+        <!-- font must be located in assets/ directory -->
     </beginning>
 
     <slides>
         <slide>
             <text>Second slide
-And the next lime
+                And the next lime
+                will be three
             </text>
-            <font size="46" color="red">tkclscrd</font>
-        </slide>
-        <slide>
-            <text>Third slide
-Long time ago
-In far far galaxy...
-            </text>
-            <font size="46" color="red">tkclscrd</font>
-        </slide>
-        <slide>
-            <text>Fourth slide</text>
-            <font size="46" color="red">tkclscrd</font>
+            <font size="46" color="red">FreeSansBold</font>
         </slide>
     </slides>
 

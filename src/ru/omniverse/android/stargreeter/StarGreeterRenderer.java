@@ -21,6 +21,7 @@ import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -31,6 +32,7 @@ import java.util.Iterator;
 public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     private final ResourceLoader mResourceLoader;
+    private final Handler mStopHandler;
 
     private Background mBackground;
 
@@ -82,12 +84,14 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private int flybyTime;
     private float mRatio;
 
-    public StarGreeterRenderer(Context context, StarGreeterData starGreeterData) {
+    public StarGreeterRenderer(Context context, StarGreeterData starGreeterData, Handler stopHandler) {
+        mStarGreeterData = starGreeterData;
+        mStopHandler = stopHandler;
+
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
 
-        mStarGreeterData = starGreeterData;
         mResourceLoader = new ResourceLoader(context);
 
         // Preload fonts
@@ -139,6 +143,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             synchronized (listLock) {
                 if (mSlideIterator.hasNext()) {
                     slide = mSlideIterator.next();
+                } else {
+                    mStopHandler.sendEmptyMessage(0);
                 }
             }
 

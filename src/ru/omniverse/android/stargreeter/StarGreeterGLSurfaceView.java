@@ -3,6 +3,8 @@ package ru.omniverse.android.stargreeter;
 import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -31,8 +33,15 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
 
         setDebugFlags(DEBUG_CHECK_GL_ERROR);
 
+        // Handler from the rendering thread
+        Handler stopHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                activity.finish();
+            }
+        };
         // Set the Renderer for drawing on the GLSurfaceView
-        mRenderer = new StarGreeterRenderer(context, starGreeterData);
+        mRenderer = new StarGreeterRenderer(context, starGreeterData, stopHandler);
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data
