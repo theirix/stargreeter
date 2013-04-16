@@ -22,7 +22,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     private final ScaleGestureDetector mScaleDetector;
     private final GestureDetector mGestureDetector;
 
-    public StarGreeterGLSurfaceView(final Activity activity) {
+    public StarGreeterGLSurfaceView(final Activity activity, StarGreeterData starGreeterData) {
         super(activity);
         final Context context = activity;
 
@@ -32,7 +32,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         setDebugFlags(DEBUG_CHECK_GL_ERROR);
 
         // Set the Renderer for drawing on the GLSurfaceView
-        mRenderer = new StarGreeterRenderer(context);
+        mRenderer = new StarGreeterRenderer(context, starGreeterData);
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data

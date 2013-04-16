@@ -17,6 +17,7 @@ public class StarGreeterData {
     private final List<Slide> slides;
     private final int slideTime;
     private final boolean keepLastSlide;
+    private final String audioName;
 
     public StarGreeterData(Document document) {
 
@@ -40,6 +41,8 @@ public class StarGreeterData {
                     document, XPathConstants.STRING));
             keepLastSlide = (Boolean) xPath.evaluate("/stargreeter/settings/keep-last-slide",
                     document, XPathConstants.BOOLEAN);
+            audioName = (String) xPath.evaluate("/stargreeter/settings/audio-name",
+                    document, XPathConstants.STRING);
 
         } catch (XPathExpressionException e) {
             throw new RuntimeException("Can not parse settings", e);
@@ -76,13 +79,17 @@ public class StarGreeterData {
         return keepLastSlide;
     }
 
+    public String getAudioName() {
+        return audioName;
+    }
+
     @Override
     public String toString() {
         return "StarGreeterData{" +
-                "beginning=" + getBeginning() +
-                ", slides=" + getSlides() +
-                ", slideTime=" + getSlideTime() +
-                ", keepLastSlide=" + isKeepLastSlide() +
+                "slides=" + slides +
+                ", slideTime=" + slideTime +
+                ", keepLastSlide=" + keepLastSlide +
+                ", audioName='" + audioName + '\'' +
                 '}';
     }
 }

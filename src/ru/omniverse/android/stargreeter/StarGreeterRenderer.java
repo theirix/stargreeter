@@ -82,16 +82,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private int flybyTime;
     private float mRatio;
 
-    public StarGreeterRenderer(Context context) {
+    public StarGreeterRenderer(Context context, StarGreeterData starGreeterData) {
         mDX = mDY = 0;
         mAbsoluteZoom = ZOOM_MAX;
         mDistance = calculateDistance(mAbsoluteZoom);
 
+        mStarGreeterData = starGreeterData;
         mResourceLoader = new ResourceLoader(context);
-
-        // Load config
-        mStarGreeterData = new StarGreeterData(mResourceLoader.loadXml(R.raw.stargreeter));
-        Log.d(Utils.TAG, "starGreeterData = " + mStarGreeterData);
 
         // Preload fonts
         for (Slide slide : mStarGreeterData.getAllSlides()) {
