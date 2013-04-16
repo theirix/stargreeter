@@ -70,6 +70,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     // TODO debug stuff
     private boolean reportedPerSlide;
 
+    private boolean mFinished = false;
+
     private final StarGreeterData mStarGreeterData;
     private Slide mCurrentSlide;
     private final Object listLock = new Object();
@@ -80,6 +82,10 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     // Lighting movement stuff
     private boolean mDynamicLightingInProgress;
     private float mLightingCounterPhase;
+
+    private boolean mOverexposeInProgress;
+    private long mOverexposeTimer;
+    private final long OVEREXPOSE_TIME = 750;
 
     // Camera movement stuff
     private volatile boolean mAutoZoomInProgress;
@@ -184,13 +190,21 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private void flipSlideIfNeeded() {
         // Flip to the next side
         long currentTick = SystemClock.elapsedRealtime();
-        if (currentTick - mPreviousFlipTick > mStarGreeterData.getSlideTime() * 1000) {
+
+        // Time left for the current slide (decreasing to zero)
+        long deltaTime = -currentTick + mPreviousFlipTick + mStarGreeterData.getSlideTime() * 1000;
+
+        if (deltaTime <= 0) {
+
+            mOverexposeInProgress = false;
 
             Slide slide = null;
             synchronized (listLock) {
                 if (mSlideIterator.hasNext()) {
                     slide = mSlideIterator.next();
-                } else {
+                } else if (!mFinished) {
+                    mFinished = true;
+                    Log.d(TAG, "Finished");
                     if (!mStarGreeterData.isKeepLastSlide())
                         mStopHandler.sendEmptyMessage(0);
                 }
@@ -201,6 +215,17 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 mPreviousFlipTick = currentTick;
                 mCurrentSlide = slide;
                 createCurrentSlide();
+            }
+        } // if there is a currently active slide and there is some time before the end of slide...
+        else if (!mFinished && mCurrentSlide != null && deltaTime < OVEREXPOSE_TIME) {
+            boolean isLast;
+            synchronized (listLock) {
+                isLast = !mSlideIterator.hasNext();
+            }
+            if (!isLast) {
+                // decreasing to zero
+                mOverexposeTimer = OVEREXPOSE_TIME - deltaTime;
+                mOverexposeInProgress = true;
             }
         }
 
@@ -217,6 +242,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mAutoZoomInProgress = true;
         mDynamicLightingInProgress = false;
         //mFlingInProgress = false;
+        mOverexposeInProgress = false;
         mDistance = DEPTH_MAX;
         mAbsoluteZoom = ZOOM_MIN;
 
@@ -377,30 +403,32 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     private void drawText() {
 
-        if (mCurrentSlide != null) {
-            glText.begin(Color.red(mCurrentSlide.getFontColor()),
-                    Color.green(mCurrentSlide.getFontColor()),
-                    Color.blue(mCurrentSlide.getFontColor()),
-                    1.0f,
-                    mMVPMatrix);
+        if (mCurrentSlide == null)
+            return;
 
-            final String[] strings = getCurrentSlideLines();
+        final int color = mOverexposeInProgress
+                ? Color.WHITE
+                : mCurrentSlide.getFontColor();
+        final float alpha = mOverexposeInProgress
+                ? Math.max(Math.min((1.0f * OVEREXPOSE_TIME - mOverexposeTimer) / OVEREXPOSE_TIME, 1.0f), 0.0f)
+                : 1.0f;
+        glText.begin(Color.red(color), Color.green(color), Color.blue(color), alpha, mMVPMatrix);
 
-            // calcualate positions
-            final float hf = glText.getCharHeight();
-            final float h0 = hf * 0.2f;
-            final float h = strings.length * (hf + h0) - h0;
+        final String[] strings = getCurrentSlideLines();
 
-            for (int i = 0; i < strings.length; i++) {
-                float y = -h / 2 + hf / 2 + i * (hf + h0);
-//                Log.d(Utils.TAG, "i=" + i + " y=" + y);
-                glText.drawC(strings[i], 0, y, 0);
-            }
+        // calcualate positions
+        final float hf = glText.getCharHeight();
+        final float h0 = hf * 0.2f;
+        final float h = strings.length * (hf + h0) - h0;
+
+        for (int i = 0; i < strings.length; i++) {
+            float y = -h / 2 + hf / 2 + i * (hf + h0);
+            glText.drawC(strings[i], 0, y, 0);
+        }
 
 //            glText.draw(String.format("%.1f %.1f", mVelX, mVelY), 30, 30, 0);
 //            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
-            glText.end();
-        }
+        glText.end();
 
     }
 
