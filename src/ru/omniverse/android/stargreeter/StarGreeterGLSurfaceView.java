@@ -1,5 +1,6 @@
 package ru.omniverse.android.stargreeter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
@@ -21,8 +22,9 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     private final ScaleGestureDetector mScaleDetector;
     private final GestureDetector mGestureDetector;
 
-    public StarGreeterGLSurfaceView(Context context) {
-        super(context);
+    public StarGreeterGLSurfaceView(final Activity activity) {
+        super(activity);
+        final Context context = activity;
 
         // Create an OpenGL ES 2.0 context.
         setEGLContextClientVersion(2);
@@ -52,6 +54,8 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
                 if (e.getX() / getWidth() < RESET_TAP_THRESHOLD && e.getY() / getHeight() < RESET_TAP_THRESHOLD) {
                     Log.d(Utils.TAG, "Double tap in a top-left corner resets an app");
                     mRenderer.resetApp();
+
+                    activity.finish();
                 } else {
                     Log.d(Utils.TAG, "Double tap reseta a view");
                     mRenderer.resetView();

@@ -16,5 +16,6 @@
 <resources>
 
     <string name="app_name">Star Greeter</string>
+    <string name="launch_button_text">Engage!</string>
 
 </resources>
