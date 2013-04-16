@@ -90,13 +90,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private int flybyTime;
     private float mRatio;
 
-    /*
-    // Fling stuff
-    private volatile boolean mFlingInProgress;
-    private float mTotalDx;
-    private float mTotalDy;
-    private float mFlingDx, mFlingDy;
-    private long mFlingStartTime, mFlingEndTime;*/
+    private long mPrevVelTimestamp = 0;
 
     // Ctor
     public StarGreeterRenderer(Context context, StarGreeterData starGreeterData, Handler stopHandler) {
@@ -123,6 +117,9 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     // external interface
 
     public void setCurrentZoom(float currentZoom) {
+        if (mAutoZoomInProgress && (mAbsoluteZoom < ZOOM_MAX * 0.7))
+            mTouched = true;
+
         if (mAutoZoomInProgress)
             return;
 
@@ -136,34 +133,30 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mDistance = calculateDistance(mAbsoluteZoom);
     }
 
-    public void setCurrentTranslate(float dx, float dy) {
+    public void setCurrentMove(float dx, float dy) {
+        if (mAutoZoomInProgress && (mAbsoluteZoom < ZOOM_MAX * 0.7))
+            mTouched = true;
+
         if (mAutoZoomInProgress)
             return;
 
         mTouched = true;
-        mDX += dx;
-        mDY += dy;
 
-//        Log.d(TAG, "current coord=" + mDX + ";" + mDY);
+        // scale
+        dx /= 2;
+        dy /= 2;
+
+        long time = SystemClock.elapsedRealtime();
+        float velX = 0, velY = 0;
+        if (mPrevVelTimestamp > 0) {
+            velX = dx / (time - mPrevVelTimestamp);
+            velY = dy / (time - mPrevVelTimestamp);
+        }
+        mPrevVelTimestamp = time;
+
+        mDX += dx * (1.0f + Math.abs(velX) / 2);
+        mDY += dy * (1.0f + Math.abs(velY) / 2);
     }
-
-    /*// TODO it does not work because ACTION_MOVE interferes with onFling
-    public void beginFling(float velocityX, float velocityY) {
-        if (mAutoZoomInProgress)
-            return;
-
-        final float distanceTimeFactor = 0.1f;
-
-        mFlingInProgress = true;
-        mTotalDx = (distanceTimeFactor * velocityX/2);
-        mTotalDy = (distanceTimeFactor * velocityY/2);
-        mFlingDx = 0;
-        mFlingDy = 0;
-        mFlingStartTime = SystemClock.elapsedRealtime();
-        mFlingEndTime = mFlingStartTime +  (long) (1000 * distanceTimeFactor);
-        Log.d(TAG, "Fling started with dx=" + mTotalDx + " dy=" + mTotalDy + " for " + distanceTimeFactor + " s");
-    }
-    */
 
     public void resetView() {
         mDX = mDY = 0;
@@ -404,6 +397,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 glText.drawC(strings[i], 0, y, 0);
             }
 
+//            glText.draw(String.format("%.1f %.1f", mVelX, mVelY), 30, 30, 0);
 //            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
             glText.end();
         }

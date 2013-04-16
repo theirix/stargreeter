@@ -24,7 +24,6 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     private final ScaleGestureDetector mScaleDetector;
     private final GestureDetector mGestureDetector;
 
-    private static final float TOUCH_MOVE_FACTOR = 0.5f;
     private float mPreviousX;
     private float mPreviousY;
 
@@ -105,10 +104,7 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
         switch (e.getAction()) {
             case MotionEvent.ACTION_MOVE:
                 if (!mScaleDetector.isInProgress()) {
-
-                    float dx = x - mPreviousX;
-                    float dy = y - mPreviousY;
-                    mRenderer.setCurrentTranslate(dx * TOUCH_MOVE_FACTOR, -dy * TOUCH_MOVE_FACTOR);
+                    mRenderer.setCurrentMove(x - mPreviousX, -(y - mPreviousY));
                     requestRender();
                 }
         }
