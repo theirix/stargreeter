@@ -33,20 +33,22 @@ public class AudioService extends Service implements MediaPlayer.OnErrorListener
 
         String audioName = intent.getStringExtra("name");
         Log.d(TAG, "Loading audio from " + audioName);
-        try {
-            AssetFileDescriptor afd = getAssets().openFd(audioName);
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setOnErrorListener(this);
-            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            afd.close();
-            mediaPlayer.prepare();
-            mediaPlayer.setLooping(true);
+        if (audioName != null && audioName.length() > 0) {
+            try {
+                AssetFileDescriptor afd = getAssets().openFd(audioName);
+                mediaPlayer = new MediaPlayer();
+                mediaPlayer.setOnErrorListener(this);
+                mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                afd.close();
+                mediaPlayer.prepare();
+                mediaPlayer.setLooping(true);
 
-            mediaPlayer.start();
+                mediaPlayer.start();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Cannot load audio", e);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Cannot load audio", e);
+            }
         }
 
 

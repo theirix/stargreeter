@@ -24,6 +24,10 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
     private final ScaleGestureDetector mScaleDetector;
     private final GestureDetector mGestureDetector;
 
+    private static final float TOUCH_MOVE_FACTOR = 0.5f;
+    private float mPreviousX;
+    private float mPreviousY;
+
     public StarGreeterGLSurfaceView(final Activity activity, StarGreeterData starGreeterData) {
         super(activity);
         final Context context = activity;
@@ -71,12 +75,20 @@ class StarGreeterGLSurfaceView extends GLSurfaceView {
                 }
                 return true;
             }
+
+            /*@Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+                mRenderer.beginFling(velocityX, velocityY);
+                return true;
+            } */
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
         });
     }
-
-    private static final float TOUCH_MOVE_FACTOR = 0.5f;
-    private float mPreviousX;
-    private float mPreviousY;
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
