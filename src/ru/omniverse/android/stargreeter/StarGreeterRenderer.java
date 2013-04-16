@@ -38,6 +38,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private final float[] mProjMatrix = new float[16];
     private final float[] mVMatrix = new float[16];
     private final float[] mTranslationMatrix = new float[16];
+    private final float[] mScaleMatrix = new float[16];
     private final float[] mTmp = new float[16];
 
     // Declare as volatile because we are updating it from another thread
@@ -79,6 +80,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
     private int flybyTime;
+    private float mRatio;
 
     public StarGreeterRenderer(Context context) {
         mDX = mDY = 0;
@@ -128,6 +130,9 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     }
 
 
+    // TODO
+    private boolean reportedPerSlide;
+
     private void flipSlideIfNeeded() {
         // Flip to the next side
         long currentTick = SystemClock.elapsedRealtime();
@@ -159,6 +164,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 cameraCounterMax = cameraCounterMin + flybyTime;
 
                 mTouched = false;
+                reportedPerSlide = false;
 
                 createGLText();
             }
@@ -227,7 +233,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             float cameraBeta = DEPTH_MAX - cameraAlpha * cameraCounterMin;
             mDistance = cameraBeta + cameraAlpha * cameraCounter;
 
-            if (mDistance < DEPTH_MIN * 1.3) {
+            if (mDistance < DEPTH_MIN * 1.01) {
                 // stop camera movement
                 mAllowAutoZoom = false;
                 mDistance = DEPTH_MIN;
@@ -277,6 +283,30 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mTranslationMatrix, 0);
         }
 
+        // scale text
+        int stringsWidth = 0;
+        for (String str : getCurrentSlideLines()) {
+            int len = 0;
+            for (int i = 0; i < str.length(); i++) {
+                len += glText.getCharWidth(str.charAt(i));
+            }
+            stringsWidth = Math.max(stringsWidth, len);
+        }
+        float stringsHeight = getCurrentSlideLines().length * glText.getCharHeight() +
+                (getCurrentSlideLines().length - 1) * glText.getCharHeight() * 0.2f;
+
+        float preScale = 1.2f;
+        float scaleX = preScale * (PROJECTION_SIZE * mRatio / stringsWidth);
+        float scaleY = preScale * (PROJECTION_SIZE / stringsHeight);
+        float scale = Math.min(scaleX, scaleY);
+        if (!reportedPerSlide) {
+            Log.d(Utils.TAG, "scaleX = " + scaleX + " scaleY = " + scaleY + " scale = " + scale + " maxStringLen=" + stringsWidth);
+            reportedPerSlide = true;
+        }
+        Matrix.setIdentityM(mScaleMatrix, 0);
+        Matrix.scaleM(mScaleMatrix, 0, scale, scale, 1.0f);
+        Matrix.multiplyMM(mMVPMatrix, 0, dupMatrix(mMVPMatrix), 0, mScaleMatrix, 0);
+
         drawText();
     }
 
@@ -289,7 +319,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                     1.0f,
                     mMVPMatrix);
 
-            final String[] strings = mCurrentSlide.getText().split("\\r?\\n");
+            final String[] strings = getCurrentSlideLines();
 
             // calcualate positions
             final float hf = glText.getCharHeight();
@@ -308,6 +338,10 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
     }
 
+    private String[] getCurrentSlideLines() {
+        return mCurrentSlide.getText().split("\\r?\\n");
+    }
+
     private float[] dupMatrix(float[] input) {
         Utils.copyVector(input, mTmp);
         return mTmp;
@@ -324,13 +358,13 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
 
-        float ratio = (float) width / height;
+        mRatio = (float) width / height;
         float top = PROJECTION_SIZE / 2, bottom = -top;
         if (width < height) {
-            top /= ratio;
-            bottom /= ratio;
+            top /= mRatio;
+            bottom /= mRatio;
         }
-        Matrix.frustumM(mProjMatrix, 0, ratio * bottom, ratio * top, bottom, top, NEAR_PLANE, FAR_PLANE);
+        Matrix.frustumM(mProjMatrix, 0, mRatio * bottom, mRatio * top, bottom, top, NEAR_PLANE, FAR_PLANE);
     }
 }
 
