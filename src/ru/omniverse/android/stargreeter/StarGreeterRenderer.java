@@ -83,9 +83,11 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private boolean mDynamicLightingInProgress;
     private float mLightingCounterPhase;
 
-    private boolean mOverexposeInProgress;
+    private boolean mOverexposeInProgress = false;
     private long mOverexposeTimer;
     private final long OVEREXPOSE_TIME = 750;
+
+    private static final long TOUCH_BOUGHT_TIME = 3000;
 
     // Camera movement stuff
     private volatile boolean mAutoZoomInProgress;
@@ -187,12 +189,23 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 * (DEPTH_MIN - DEPTH_MAX) / (ZOOM_MAX - ZOOM_MIN);
     }
 
+    private long calculateDeltaTime(long currentTick) {
+        return -currentTick + mPreviousFlipTick + mStarGreeterData.getSlideTime() * 1000;
+    }
+
     private void flipSlideIfNeeded() {
         // Flip to the next side
         long currentTick = SystemClock.elapsedRealtime();
 
         // Time left for the current slide (decreasing to zero)
-        long deltaTime = -currentTick + mPreviousFlipTick + mStarGreeterData.getSlideTime() * 1000;
+        long deltaTime = calculateDeltaTime(currentTick);
+
+        // Override timer if touched
+        if (mTouched) {
+            mPreviousFlipTick = currentTick - TOUCH_BOUGHT_TIME;
+            deltaTime = calculateDeltaTime(currentTick);
+            mTouched = false;
+        }
 
         if (deltaTime <= 0) {
 
@@ -245,7 +258,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mOverexposeInProgress = false;
         mDistance = DEPTH_MAX;
         mAbsoluteZoom = ZOOM_MIN;
-
         mLightingCounterPhase = 0.0f;
 
         cameraCounterMin = SystemClock.elapsedRealtime();
@@ -423,7 +435,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         for (int i = 0; i < strings.length; i++) {
             float y = -h / 2 + hf / 2 + i * (hf + h0);
-            glText.drawC(strings[i], 0, y, 0);
+            glText.drawC(strings[strings.length - i - 1], 0, y, 0);
         }
 
 //            glText.draw(String.format("%.1f %.1f", mVelX, mVelY), 30, 30, 0);
