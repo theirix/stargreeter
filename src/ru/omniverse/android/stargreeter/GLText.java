@@ -20,7 +20,7 @@ class GLText {
 
     //--Constants--//
     public final static int CHAR_START = 32;           // First Character (ASCII Code)
-    public final static int CHAR_END = 126;            // Last Character (ASCII Code)
+    public final static int CHAR_END = 255;            // Last Character (ASCII Code)
     public final static int CHAR_CNT = (((CHAR_END - CHAR_START) + 1) + 1);  // Character Count (Including Character to use for Unknown)
 
     public final static int CHAR_NONE = 32;            // Character to Use for Unknown (ASCII Code)
@@ -33,6 +33,7 @@ class GLText {
     // must be the same as the size of u_MVPMatrix
     // in BatchTextProgram
 
+    private final char ansiTable[] = new char[256];
 
     //--Members--//
     private final ResourceLoader mResourceLoader;
@@ -73,6 +74,7 @@ class GLText {
 //            program.init();
 //        }
 
+        initAnsiTable();
 
         mProgramHandle = Utils.createShaderProgram(resourceLoader, R.raw.font_vertex, R.raw.font_fragment,
                 new String[]{"a_Position", "a_TexCoordinate", "a_MVPMatrixIndex"});
@@ -108,6 +110,22 @@ class GLText {
         // Initialize the color and texture handles
         mColorHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Color");
         mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Texture");
+    }
+
+    private void initAnsiTable() {
+        final String russianSequence = "АБВГДЕЖЗИЙКЛМОПРОСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмопростуфхцчшщъыьэюя";
+        int i = 0;
+        for (; i < 32; ++i) {
+            ansiTable[i] = CHAR_NONE;
+        }
+        for (; i < 192; ++i) {
+            ansiTable[i] = (char) i;
+        }
+        for (; i < 256; ++i) {
+            ansiTable[i] = russianSequence.charAt(i - 192);
+        }
+        ansiTable[168] = 'Ё';
+        ansiTable[184] = 'Ё';
     }
 
     private static int loadTexture(Bitmap bitmap) {
@@ -180,7 +198,7 @@ class GLText {
         float[] w = new float[2];                       // Working Width Value
         int cnt = 0;                                    // Array Counter
         for (char c = CHAR_START; c <= CHAR_END; c++) {  // FOR Each Character
-            s[0] = c;                                    // Set Character
+            s[0] = ansiTable[(int) c];
             paint.getTextWidths(s, 0, 1, w);           // Get Character Bounds
             charWidths[cnt] = w[0];                      // Get Width
             if (charWidths[cnt] > charWidthMax)        // IF Width Larger Than Max Width
@@ -229,7 +247,7 @@ class GLText {
         float x = fontPadX;                             // Set Start Position (X)
         float y = (cellHeight - 1) - fontDescent - fontPadY;  // Set Start Position (Y)
         for (char c = CHAR_START; c <= CHAR_END; c++) {  // FOR Each Character
-            s[0] = c;                                    // Set Character to Draw
+            s[0] = ansiTable[(int) c];
             canvas.drawText(s, 0, 1, x, y, paint);     // Draw Character
             x += cellWidth;                              // Move to Next Character
             if ((x + cellWidth - fontPadX) > textureSize) {  // IF End of Line Reached
@@ -326,13 +344,22 @@ class GLText {
         letterX = letterY = 0;
 
         for (int i = 0; i < len; i++) {              // FOR Each Character in String
-            int c = (int) text.charAt(i) - CHAR_START;  // Calculate Character Index (Offset by First Char in Font)
+            int c = indexInAnsi(text.charAt(i)) - CHAR_START;
             if (c < 0 || c >= CHAR_CNT)                // IF Character Not In Font
                 c = CHAR_UNKNOWN;                         // Set to Unknown Character Index
             //TODO: optimize - applying the same model matrix to all the characters in the string
             batch.drawSprite(letterX, letterY, chrWidth, chrHeight, charRgn[c], modelMatrix);  // Draw the Character
             letterX += (charWidths[c] + spaceX) * scaleX;    // Advance X Position by Scaled Character Width
         }
+    }
+
+    private int indexInAnsi(char c) {
+        for (int q = 0; q < 255; ++q) {
+            if (ansiTable[q] == c) {
+                return q;
+            }
+        }
+        return 0;
     }
 
     public void draw(String text, float x, float y) {
@@ -416,7 +443,9 @@ class GLText {
         float len = 0.0f;                               // Working Length
         int strLen = text.length();                     // Get String Length (Characters)
         for (int i = 0; i < strLen; i++) {           // For Each Character in String (Except Last
-            int c = (int) text.charAt(i) - CHAR_START;  // Calculate Character Index (Offset by First Char in Font)
+            int c = indexInAnsi(text.charAt(i)) - CHAR_START;        // Calculate Character Index (Offset by First Char in Font)
+            if (c < 0 || c >= CHAR_CNT)                // IF Character Not In Font
+                c = CHAR_UNKNOWN;                         // Set to Unknown Character Index
             len += (charWidths[c] * scaleX);           // Add Scaled Character Width to Total Length
         }
         len += (strLen > 1 ? ((strLen - 1) * spaceX) * scaleX : 0);  // Add Space Length
@@ -430,7 +459,9 @@ class GLText {
     // A: chr - the character to get width for
     // R: the requested character size (scaled)
     public float getCharWidth(char chr) {
-        int c = chr - CHAR_START;                       // Calculate Character Index (Offset by First Char in Font)
+        int c = indexInAnsi(chr) - CHAR_START;        // Calculate Character Index (Offset by First Char in Font)
+        if (c < 0 || c >= CHAR_CNT)                // IF Character Not In Font
+            c = CHAR_UNKNOWN;                         // Set to Unknown Character Index
         return (charWidths[c] * scaleX);              // Return Scaled Character Width
     }
 

@@ -425,6 +425,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
                 ? Math.max(Math.min((1.0f * OVEREXPOSE_TIME - mOverexposeTimer) / OVEREXPOSE_TIME, 1.0f), 0.0f)
                 : 1.0f;
         glText.begin(Color.red(color), Color.green(color), Color.blue(color), alpha, mMVPMatrix);
+//        glText.begin(1,1,1,1, mMVPMatrix);
 
         final String[] strings = getCurrentSlideLines();
 
@@ -438,6 +439,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
             glText.drawC(strings[strings.length - i - 1], 0, y, 0);
         }
 
+//        glText.drawTexture(0,0, mMVPMatrix);
 //            glText.draw(String.format("%.1f %.1f", mVelX, mVelY), 30, 30, 0);
 //            glText.draw(String.format("%.1f", mDistance), 30, 30, 0);
         glText.end();
