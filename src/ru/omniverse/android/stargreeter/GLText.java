@@ -14,6 +14,9 @@ import android.graphics.Typeface;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
+import android.util.Log;
+
+import java.util.Arrays;
 
 @SuppressWarnings("UnusedDeclaration")
 class GLText {
@@ -113,10 +116,10 @@ class GLText {
     }
 
     private void initAnsiTable() {
-        final String russianSequence = "АБВГДЕЖЗИЙКЛМОПРОСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмопростуфхцчшщъыьэюя";
+        final String russianSequence = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя";
         int i = 0;
         for (; i < 32; ++i) {
-            ansiTable[i] = CHAR_NONE;
+            ansiTable[i] = 0;
         }
         for (; i < 192; ++i) {
             ansiTable[i] = (char) i;
@@ -347,6 +350,8 @@ class GLText {
             int c = indexInAnsi(text.charAt(i)) - CHAR_START;
             if (c < 0 || c >= CHAR_CNT)                // IF Character Not In Font
                 c = CHAR_UNKNOWN;                         // Set to Unknown Character Index
+//            Log.d(Utils.TAG, "width for '" + text.charAt(i) + "' is " + charWidths[c] +  " " + c);
+
             //TODO: optimize - applying the same model matrix to all the characters in the string
             batch.drawSprite(letterX, letterY, chrWidth, chrHeight, charRgn[c], modelMatrix);  // Draw the Character
             letterX += (charWidths[c] + spaceX) * scaleX;    // Advance X Position by Scaled Character Width
@@ -354,7 +359,7 @@ class GLText {
     }
 
     private int indexInAnsi(char c) {
-        for (int q = 0; q < 255; ++q) {
+        for (int q = 0; q < 256; ++q) {
             if (ansiTable[q] == c) {
                 return q;
             }

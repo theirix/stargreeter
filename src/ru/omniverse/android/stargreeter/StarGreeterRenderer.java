@@ -95,10 +95,11 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     private float cameraCounterMin, cameraCounterMax;
 
     public static final float ZOOM_SMOOTH_FACTOR = 0.05f;
-    private int flybyTime;
+    private int mFlybyTime;
     private float mRatio;
 
     private long mPrevVelTimestamp = 0;
+    private int mSlideTimeMultiplier;
 
     // Ctor
     public StarGreeterRenderer(Context context, StarGreeterData starGreeterData, Handler stopHandler) {
@@ -115,8 +116,6 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         for (Slide slide : mStarGreeterData.getAllSlides()) {
             mResourceLoader.loadCachedFont(slide.getFontName());
         }
-
-        flybyTime = mStarGreeterData.getSlideTime() * 1000 / 3;
 
         // Set to the first slide
         mSlideIterator = mStarGreeterData.getAllSlides().iterator();
@@ -190,7 +189,7 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
     }
 
     private long calculateDeltaTime(long currentTick) {
-        return -currentTick + mPreviousFlipTick + mStarGreeterData.getSlideTime() * 1000;
+        return -currentTick + mPreviousFlipTick + mSlideTimeMultiplier * mStarGreeterData.getSlideTime() * 1000;
     }
 
     private void flipSlideIfNeeded() {
@@ -258,10 +257,14 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
         mOverexposeInProgress = false;
         mDistance = DEPTH_MAX;
         mAbsoluteZoom = ZOOM_MIN;
+        mDX = mDY = 0;
         mLightingCounterPhase = 0.0f;
 
+        mSlideTimeMultiplier = mCurrentSlide.equals(mStarGreeterData.getBeginning()) ? 2 : 1;
+        mFlybyTime = mSlideTimeMultiplier * mStarGreeterData.getSlideTime() * 1000 / 3;
+
         cameraCounterMin = SystemClock.elapsedRealtime();
-        cameraCounterMax = cameraCounterMin + flybyTime;
+        cameraCounterMax = cameraCounterMin + mFlybyTime;
 
         mTouched = false;
         reportedPerSlide = false;
@@ -333,8 +336,8 @@ public class StarGreeterRenderer implements GLSurfaceView.Renderer {
 
         // adjust lights
         final float xLightOffset = 0.5f;
-        final float lightAmplitude = 3f;
-        final float lightSlowFactor = 2f;
+        final float lightAmplitude = 2f;
+        final float lightSlowFactor = 1.0f;
 
         // fixed lighting if far enough
         boolean shouldDynamicLighting = Math.abs(mDistance - DEPTH_MIN) < (DEPTH_MAX - DEPTH_MIN) / 3.0;
