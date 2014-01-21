@@ -1,12 +1,5 @@
 package ru.omniverse.android.stargreeter;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 14.04.2013
- * Time: 23:57
- */
-
 class Slide {
     private final String text;
     private final String fontName;

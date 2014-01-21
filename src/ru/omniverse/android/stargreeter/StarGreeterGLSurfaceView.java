@@ -10,12 +10,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 14.04.2013
- * Time: 22:52
- */
 @SuppressWarnings("FieldCanBeLocal")
 class StarGreeterGLSurfaceView extends GLSurfaceView {
 

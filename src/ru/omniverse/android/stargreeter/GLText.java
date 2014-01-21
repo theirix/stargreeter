@@ -1,11 +1,4 @@
-package ru.omniverse.android.stargreeter;// This is a OpenGL ES 1.0 dynamic font rendering system. It loads actual font
-// files, generates a font map (texture) from them, and allows rendering of
-// text strings.
-//
-// NOTE: the rendering portions of this class uses a sprite batcher in order
-// provide decent speed rendering. Also, rendering assumes a BOTTOM-LEFT
-// origin, and the (x,y) positions are relative to that, as well as the
-// bottom-left of the string to render.
+package ru.omniverse.android.stargreeter;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

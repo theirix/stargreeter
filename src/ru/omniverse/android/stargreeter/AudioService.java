@@ -11,12 +11,6 @@ import java.io.IOException;
 
 import static ru.omniverse.android.stargreeter.Utils.TAG;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 16.04.2013
- * Time: 22:04
- */
 public class AudioService extends Service implements MediaPlayer.OnErrorListener {
     private MediaPlayer mediaPlayer;
 

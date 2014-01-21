@@ -6,12 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 16.04.2013
- * Time: 19:48
- */
 public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

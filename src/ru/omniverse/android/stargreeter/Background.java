@@ -8,12 +8,6 @@ import android.util.Log;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-/**
- * Created with IntelliJ IDEA.
- * User: irix
- * Date: 14.04.2013
- * Time: 18:03
- */
 @SuppressWarnings("FieldCanBeLocal")
 class Background {
 
